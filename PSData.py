@@ -6,6 +6,7 @@ Created on Thu Feb 25 16:19:06 2021
 """
 from types import SimpleNamespace
 import simplejson as json
+import matplotlib.pyplot as plt
 
 class Description:
     SWVParameters = ''
@@ -102,10 +103,64 @@ class Data:
     methodformeasurement = ''
     measurements = []
     
+    
 class PSSource:
+    legend_on = True
+    units_on = True
+    __got_units = False
+    title = ''
+    
     def __init__(self, filename):
         f = open(filename, "rb")
         data = f.read().decode('utf-16').replace('\r\n',' ').replace(':true',r':"True"').replace(':false',r':"False"')
         f.close
         data2 = data[0:(len(data) - 1)]
         self.Data = json.loads(data2, object_hook=lambda d: SimpleNamespace(**d))
+        
+    def plot(self):
+        # Experimental
+        method = []
+        shortlist = {}
+        units = []
+        for measurement in self.Data.measurements:
+            a = self.__getMethodType(measurement.method)
+            if a in shortlist:
+                shortlist[a] = shortlist[a] + 1
+                i = shortlist[a]
+            else:
+                i = 1
+                shortlist[a] = i
+            lab = a + ' ' + str(i)
+            method.append(lab)
+            for curve in measurement.curves:
+                if self.units_on:
+                    if not self.__got_units:
+                        units.append(self.__getUnits(curve.title))
+                        self.__got_units = True
+                xvalues = []
+                yvalues = []
+                for x in curve.xaxisdataarray.datavalues:
+                    xvalues.append(x.v)
+                for y in curve.yaxisdataarray.datavalues:
+                    yvalues.append(y.v)
+                plt.plot(xvalues, yvalues, label=lab.upper())
+        if self.legend_on:
+            plt.legend(bbox_to_anchor=(1.05,1.05))
+        if self.units_on:
+            plt.xlabel(units[0][0])
+            plt.ylabel(units[0][1])
+        if self.title is not '':
+            plt.title(self.title)
+        plt.grid(True)
+        
+    def __getUnits(self, curveTitle):
+        details = curveTitle.split(" ")
+        return [details[3], details[1]]
+        
+    def __getMethodType(self,method):
+        methodName = ''
+        splitted = method.split("\r\n")
+        for line in splitted:
+            if "METHOD_ID" in line:
+                methodName = line.split("=")[1]
+        return methodName

@@ -6,24 +6,17 @@ Created on Thu Feb 25 19:23:21 2021
 
 This is an example on how to use the PSData.py file
 """
-import matplotlib.pyplot as plt
-import simplejson as json
 from PSData import *
 
 # just paste the file source here:
-a = PSSource(r'C:\Users\Stephan\Desktop\bik\hah\A.pssession')
+parsedData = PSSource(r'C:\Users\Stephan\Desktop\bik\hah\A.pssession')
+parsedData.plot()
 
-for measurement in a.Data.measurements:
-    for curve in measurement.curves:
-        xvalues = []
-        yvalues = []
-        for x in curve.xaxisdataarray.datavalues:
-            xvalues.append(x.v)
-        for y in curve.yaxisdataarray.datavalues:
-            yvalues.append(y.v)
-        plt.plot(xvalues, yvalues)
-        
 """
+parsedData.legend_on = True by default
+parsedData.units_on = True by default
+parsedData.title = "" by default
+
 There is quite a bit of data within the PSData object that is usable
 For example, the curve.title contains the units and method used in the experiment and the measurement.method has useful information
 
