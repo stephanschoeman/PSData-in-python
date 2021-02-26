@@ -1,6 +1,6 @@
 # PSData in python
  Load a .pssession file into python for local processing.
- I do a bunch of Cyclic Voltammetry and Square Wave Voltammetry experiments regularly and wrote this Python script to extact my data for some post-processing. The main purpose is to skip additional export steps from the .pssession file, but I added plotting and baseline tools.
+ I do a bunch of Cyclic Voltammetry and Square Wave Voltammetry experiments regularly and wrote this Python script to extact my data for some post-processing. The main purpose is to skip additional export steps from the .pssession file, but I added plotting and baseline tools. I use [this](https://www.palmsens.com/product/palmsens4/) device for my measurements.
  
  **Get started:**
  
