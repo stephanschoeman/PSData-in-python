@@ -110,14 +110,13 @@ class MethodType:
     All = ''
     
 class Baseline:
-    __subtractBaseline = False
-    __generatedBaseline = False
-    __gradient = 0
-    __constant = 0
-    
     def __init__(self):
         self._startPosition = -1
         self._endPosition = -1
+        self.__subtractBaseline = False
+        self.__generatedBaseline = False
+        self.__gradient = 0
+        self.__constant = 0
         
     @property
     def startPosition(self):
@@ -153,15 +152,24 @@ class Baseline:
         return y
 
 class PSSource:
-    methodType = MethodType()
-    baseline = Baseline()
-    legend_on = True
-    units_on = True
-    title = ''
-    methodFilter = ''
-    __jsonParsed = False
+    @property
+    def methodFilter(self):
+        return self._methodFilter
+    
+    @methodFilter.setter
+    def methodFilter(self, val):
+        self.__filterOnMethod = True
+        self._methodFilter = val
     
     def __init__(self, filename):
+        self.__filterOnMethod = False
+        self._methodFilter = ''  
+        self.methodType = MethodType()
+        self.baseline = Baseline()
+        self.legend_on = True
+        self.units_on = True
+        self.title = ''
+        self.__jsonParsed = False
         try:
             f = open(filename, "rb")
             data = f.read().decode('utf-16').replace('\r\n',' ').replace(':true',r':"True"').replace(':false',r':"False"')
@@ -182,22 +190,16 @@ class PSSource:
         if not self.__jsonParsed:
             return
         
-        got_units = False
-        method = []
         shortlistOfMethods = {}
         units = []
-        filterMethods = False
-        gCanPlot = False
-        if not self.methodFilter == '':
-            filterMethods = True
+        CanPlotAll = False
             
         for measurement in self.Data.measurements:
             canplot = True
             currentMethod = self.__getMethodType(measurement.method).upper()
             
-            if filterMethods:
-                if not currentMethod in self.methodFilter:
-                    canplot = False
+            if self.__filterOnMethod and not currentMethod in self._methodFilter:
+                canplot = False
             
             if canplot:
                 if currentMethod in shortlistOfMethods:
@@ -206,19 +208,16 @@ class PSSource:
                 else:
                     i = 1
                     shortlistOfMethods[currentMethod] = i
-                lab = currentMethod + ' ' + str(i)
-                method.append(lab)
+                currentLabel = currentMethod + ' ' + str(i)
+                
                 for curve in measurement.curves:
                     if self.methodFilter is self.methodType.SWV:
                         self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
-                    else:
-                        if not got_units: #hopefully only 1 print, but not important
-                            print("Cannot do baseline subtraction for any other method but SWV, yet!")
+                    elif len(units) <= 0: #hopefully only 1 print, but not important
+                        print("Cannot do baseline subtraction for any other method but SWV, yet!")
                     
-                    if self.units_on:
-                        if not got_units:
-                            units.append(self.__getUnits(curve.title))
-                            got_units = True
+                    if self.units_on and len(units) <= 0:
+                        units.append(self.__getUnits(curve.title))
                             
                     xvalues = []
                     yvalues = []
@@ -228,14 +227,14 @@ class PSSource:
                         xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
                         yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
                         pos = pos + 1
-                    plt.plot(xvalues, yvalues, label=lab)
-                    gCanPlot = True
+                    plt.plot(xvalues, yvalues, label=currentLabel)
+                    CanPlotAll = True
                     
-        if gCanPlot:
+        if CanPlotAll:
             plt.grid(True)
             if self.legend_on:
                 plt.legend(bbox_to_anchor=(1.05,1.05))
-            if self.units_on and got_units:
+            if self.units_on and len(units) > 0:
                 plt.xlabel(units[0][0])
                 plt.ylabel(units[0][1])
             if self.title is not '':
@@ -247,7 +246,7 @@ class PSSource:
         details = curveTitle.split(" ")
         return [details[3], details[1]]
         
-    def __getMethodType(self,method):
+    def __getMethodType(self, method):
         methodName = ''
         splitted = method.split("\r\n")
         for line in splitted:
