@@ -110,28 +110,45 @@ class MethodType:
     All = ''
     
 class Baseline:
-    startPosition = -1
-    endPosition = -1
-    subtractBaseline = False
+    __subtractBaseline = False
     __generatedBaseline = False
     __gradient = 0
     __constant = 0
     
+    def __init__(self):
+        self._startPosition = -1
+        self._endPosition = -1
+        
+    @property
+    def startPosition(self):
+        return self._startPosition
+    
+    @startPosition.setter
+    def startPosition(self, val):
+        self.__subtractBaseline = True
+        self._startPosition = val
+
+    @property
+    def endPosition(self):
+        return self._endPosition
+    
+    @endPosition.setter
+    def endPosition(self, val):
+        self._endPosition = val
+    
     def generateBaseline(self, x, y):
-        try:
-            if self.startPosition > -1:
+        if self.__subtractBaseline:
+            try:
                 if self.endPosition == -1:
                     self.endPosition = len(y) - self.startPosition
                 self.__gradient = (y[self.startPosition].v - y[self.endPosition].v)/(x[self.startPosition].v - x[self.endPosition].v)
                 self.__constant = y[self.startPosition].v - (x[self.startPosition].v*self.__gradient)
                 self.__generatedBaseline = True
-            else:
-                print('Could not generate baseline. Set startPosition and endPosition')
-        except:
-            print('Exception: Could not generate baseline. Check validity of startPosition and endPosition.')
+            except:
+                print('Exception: Could not generate baseline. Check validity of startPosition and endPosition.')
             
     def subtract(self, x, y):
-        if self.subtractBaseline:
+        if self.__subtractBaseline:
             return (y - (self.__gradient*x + self.__constant))
         return y
 
@@ -192,6 +209,12 @@ class PSSource:
                 lab = currentMethod + ' ' + str(i)
                 method.append(lab)
                 for curve in measurement.curves:
+                    if self.methodFilter is self.methodType.SWV:
+                        self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
+                    else:
+                        if not got_units: #hopefully only 1 print, but not important
+                            print("Cannot do baseline subtraction for any other method but SWV, yet!")
+                    
                     if self.units_on:
                         if not got_units:
                             units.append(self.__getUnits(curve.title))
@@ -201,23 +224,15 @@ class PSSource:
                     yvalues = []
                     pos = 0
                     
-                    if self.baseline.subtractBaseline:
-                        if self.methodFilter is self.methodType.SWV:
-                            self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
-                        else:
-                            self.baseline.subtractBaseline = False
-                            print("Cannot do baseline subtraction for any other method but SWV, yet!")
-                    else:
-                        self.baseline.subtractBaseline = False
-                    
                     for y in curve.yaxisdataarray.datavalues:
                         xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
                         yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
                         pos = pos + 1
                     plt.plot(xvalues, yvalues, label=lab)
-                    plt.grid(True)
                     gCanPlot = True
+                    
         if gCanPlot:
+            plt.grid(True)
             if self.legend_on:
                 plt.legend(bbox_to_anchor=(1.05,1.05))
             if self.units_on and got_units:
