@@ -3,6 +3,7 @@
  I do a bunch of Cyclic Voltammetry and Square Wave Voltammetry experiments regularly and wrote this Python script to extact my data for some post-processing. The main purpose is to skip additional export steps from the .pssession file, but I added plotting and baseline tools.
  
  **Get started:**
+ 
  Download and install the dependencies if required.
  Place PSData.py and ReadPsData.py in the same directory.
  Open ReadPsData.py
