@@ -108,14 +108,41 @@ class MethodType:
     SWV = 'SWV'
     EIS = 'EIS'
     All = ''
+    
+class Baseline:
+    startPosition = -1
+    endPosition = -1
+    subtractBaseline = False
+    __generatedBaseline = False
+    __gradient = 0
+    __constant = 0
+    
+    def generateBaseline(self, x, y):
+        try:
+            if self.startPosition > -1:
+                if self.endPosition == -1:
+                    self.endPosition = len(y) - self.startPosition
+                self.__gradient = (y[self.startPosition].v - y[self.endPosition].v)/(x[self.startPosition].v - x[self.endPosition].v)
+                self.__constant = y[self.startPosition].v - (x[self.startPosition].v*self.__gradient)
+                self.__generatedBaseline = True
+            else:
+                print('Could not generate baseline. Set startPosition and endPosition')
+        except:
+            print('Exception: Could not generate baseline. Check validity of startPosition and endPosition.')
+            
+    def subtract(self, x, y):
+        if self.subtractBaseline:
+            return (y - (self.__gradient*x + self.__constant))
+        return y
 
 class PSSource:
     methodType = MethodType()
+    baseline = Baseline()
     legend_on = True
     units_on = True
-    __jsonParsed = False
     title = ''
     methodFilter = ''
+    __jsonParsed = False
     
     def __init__(self, filename):
         try:
@@ -146,7 +173,7 @@ class PSSource:
         gCanPlot = False
         if not self.methodFilter == '':
             filterMethods = True
-        
+            
         for measurement in self.Data.measurements:
             canplot = True
             currentMethod = self.__getMethodType(measurement.method).upper()
@@ -169,12 +196,24 @@ class PSSource:
                         if not got_units:
                             units.append(self.__getUnits(curve.title))
                             got_units = True
+                            
                     xvalues = []
                     yvalues = []
-                    for x in curve.xaxisdataarray.datavalues:
-                        xvalues.append(x.v)
+                    pos = 0
+                    
+                    if self.baseline.subtractBaseline:
+                        if self.methodFilter is self.methodType.SWV:
+                            self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
+                        else:
+                            self.baseline.subtractBaseline = False
+                            print("Cannot do baseline subtraction for any other method but SWV, yet!")
+                    else:
+                        self.baseline.subtractBaseline = False
+                    
                     for y in curve.yaxisdataarray.datavalues:
-                        yvalues.append(y.v)
+                        xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
+                        yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
+                        pos = pos + 1
                     plt.plot(xvalues, yvalues, label=lab)
                     plt.grid(True)
                     gCanPlot = True
@@ -188,6 +227,7 @@ class PSSource:
                 plt.title(self.title)
         else:
             print('No data found for: ' + self.methodFilter)
+
     def __getUnits(self, curveTitle):
         details = curveTitle.split(" ")
         return [details[3], details[1]]
