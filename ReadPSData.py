@@ -6,21 +6,23 @@ Created on Thu Feb 25 19:23:21 2021
 
 This is an example on how to use the PSData.py file
 """
-from PSData import *
+import PSData as PS
 
 # just paste the file source here:
-parsedData = PSSource(r'C:\Users\Stephan\Desktop\bik\hah\A.pssession')
-parsedData.plot()
+data = PS.PSSource(r'C:\Users\Stephan\Desktop\bik\sasa\E.pssession')
+data.methodFilter = data.methodType.SWV
+data.plot()
 
 """
-parsedData.legend_on = True by default
-parsedData.units_on = True by default
-parsedData.title = "" by default
+legend_on = True by default
+units_on = True by default
+title = "" by default
+methodFilter = all by default. Options are SWV, CV, and EIS. All string values.
 
 There is quite a bit of data within the PSData object that is usable
 For example, the curve.title contains the units and method used in the experiment and the measurement.method has useful information
 
 You can view the object structure in the PSData.py file for more information
-or you can print the text (data2, line 110) and paste it in an online json converter for easy viewing
+or you can print the text (data2, line 118) and paste it in an online json converter for easy viewing
 
 """

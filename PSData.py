@@ -103,56 +103,91 @@ class Data:
     methodformeasurement = ''
     measurements = []
     
-    
+class MethodType:
+    CV = 'CV'
+    SWV = 'SWV'
+    EIS = 'EIS'
+    All = ''
+
 class PSSource:
+    methodType = MethodType()
     legend_on = True
     units_on = True
-    __got_units = False
+    __jsonParsed = False
     title = ''
+    methodFilter = ''
     
     def __init__(self, filename):
-        f = open(filename, "rb")
-        data = f.read().decode('utf-16').replace('\r\n',' ').replace(':true',r':"True"').replace(':false',r':"False"')
-        f.close
-        data2 = data[0:(len(data) - 1)]
-        self.Data = json.loads(data2, object_hook=lambda d: SimpleNamespace(**d))
+        try:
+            f = open(filename, "rb")
+            data = f.read().decode('utf-16').replace('\r\n',' ').replace(':true',r':"True"').replace(':false',r':"False"')
+            f.close
+        except:
+            print('Could not find or open file: ' + filename)
+            return
+            
+        try:
+            data2 = data[0:(len(data) - 1)] # has a weird character at the end
+            self.Data = json.loads(data2, object_hook=lambda d: SimpleNamespace(**d))
+            self.__jsonParsed = True
+        except:
+            print('Failed to parse string to JSON')
         
     def plot(self):
-        # Experimental
-        method = []
-        shortlist = {}
-        units = []
-        for measurement in self.Data.measurements:
-            a = self.__getMethodType(measurement.method)
-            if a in shortlist:
-                shortlist[a] = shortlist[a] + 1
-                i = shortlist[a]
-            else:
-                i = 1
-                shortlist[a] = i
-            lab = a + ' ' + str(i)
-            method.append(lab)
-            for curve in measurement.curves:
-                if self.units_on:
-                    if not self.__got_units:
-                        units.append(self.__getUnits(curve.title))
-                        self.__got_units = True
-                xvalues = []
-                yvalues = []
-                for x in curve.xaxisdataarray.datavalues:
-                    xvalues.append(x.v)
-                for y in curve.yaxisdataarray.datavalues:
-                    yvalues.append(y.v)
-                plt.plot(xvalues, yvalues, label=lab.upper())
-        if self.legend_on:
-            plt.legend(bbox_to_anchor=(1.05,1.05))
-        if self.units_on:
-            plt.xlabel(units[0][0])
-            plt.ylabel(units[0][1])
-        if self.title is not '':
-            plt.title(self.title)
-        plt.grid(True)
+        # Experimental, use at own risk
+        if not self.__jsonParsed:
+            return
         
+        got_units = False
+        method = []
+        shortlistOfMethods = {}
+        units = []
+        filterMethods = False
+        gCanPlot = False
+        if not self.methodFilter == '':
+            filterMethods = True
+        
+        for measurement in self.Data.measurements:
+            canplot = True
+            currentMethod = self.__getMethodType(measurement.method).upper()
+            
+            if filterMethods:
+                if not currentMethod in self.methodFilter:
+                    canplot = False
+            
+            if canplot:
+                if currentMethod in shortlistOfMethods:
+                    shortlistOfMethods[currentMethod] = shortlistOfMethods[currentMethod] + 1
+                    i = shortlistOfMethods[currentMethod]
+                else:
+                    i = 1
+                    shortlistOfMethods[currentMethod] = i
+                lab = currentMethod + ' ' + str(i)
+                method.append(lab)
+                for curve in measurement.curves:
+                    if self.units_on:
+                        if not got_units:
+                            units.append(self.__getUnits(curve.title))
+                            got_units = True
+                    xvalues = []
+                    yvalues = []
+                    for x in curve.xaxisdataarray.datavalues:
+                        xvalues.append(x.v)
+                    for y in curve.yaxisdataarray.datavalues:
+                        yvalues.append(y.v)
+                    plt.plot(xvalues, yvalues, label=lab)
+                    plt.grid(True)
+                    gCanPlot = True
+        if gCanPlot:
+            if self.legend_on:
+                plt.legend(bbox_to_anchor=(1.05,1.05))
+            if self.units_on and got_units:
+                plt.xlabel(units[0][0])
+                plt.ylabel(units[0][1])
+            if self.title is not '':
+                plt.title(self.title)
+        else:
+            print('No data found for: ' + self.methodFilter)
     def __getUnits(self, curveTitle):
         details = curveTitle.split(" ")
         return [details[3], details[1]]
