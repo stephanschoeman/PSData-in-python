@@ -32,6 +32,6 @@ and that is about all you need to get started!
 **Additional functionality (so far):**
 - ```data.methodFilter = data.methodType.SWV``` will filter all plots on SWV. Also available: CV and EIS (not tested)
 - ```data.baseline``` (only available for SWV):
-  - ```.startPosition``` set to int value of the position that you want to use for the baseline
-  - ```.endPosition``` set to int value of the position that you want to use for the baseline
-  - ```.subtractBaseline``` set to True to plot the subtracted values
+  - ```.startPosition``` set to int value of the position that you want to use for the baseline. Must be set for baseline to work.
+  - ```.endPosition``` set to int value of the position that you want to use for the baseline. If not set, taken as ```len(measurements) - startPosition```
+  - ~~```.subtractBaseline``` set to True to plot the subtracted values~~ This is done automatically when you set ```startPosition```
