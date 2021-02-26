@@ -11,3 +11,4 @@
  Dependencies:
   - SimpleNamespace
   - simplejson
+  - matplotlib
