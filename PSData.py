@@ -9,105 +9,118 @@ import simplejson as json
 import matplotlib.pyplot as plt
 
 class Description:
-    SWVParameters = ''
-    CVParameters = ''
-    Pretreatment = ''
-    Technique = ''
+    def __init__(self):
+        self.SWVParameters = ''
+        self.CVParameters = ''
+        self.Pretreatment = ''
+        self.Technique = ''
 
 class Unit:
-    type = ''
-    s = ''
-    q = ''
-    a = ''
+    def __init__(self):
+        self.type = ''
+        self.s = ''
+        self.q = ''
+        self.a = ''
 
 class Datavalue:
-    v = 0.0
-    s = 0
-    c = 0
+    def __init__(self):
+        self.v = 0.0
+        self.s = 0
+        self.c = 0
     
 class Value:
-    type = ''
-    arraytype = 0
-    description = ''
-    unit = Unit()
-    datavalues = []
-    datavaluetype = ''
+    def __init__(self):
+        self.type = ''
+        self.arraytype = 0
+        self.description = ''
+        self.unit = Unit()
+        self.datavalues = []
+        self.datavaluetype = ''
     
 class Dataset:
-    type = ''
-    values = []
+    def __init__(self):
+        self.type = ''
+        self.values = []
     
 class Appearance:
-    type = ''
-    autoassigncolor = False
-    color = ''
-    linewidth = 0
-    symbolsize = 0
-    symboltype = 0
-    symbolfill = False
-    noline = False
+    def __init__(self):
+        self.type = ''
+        self.autoassigncolor = False
+        self.color = ''
+        self.linewidth = 0
+        self.symbolsize = 0
+        self.symboltype = 0
+        self.symbolfill = False
+        self.noline = False
     
 class Xaxisdataarray:
-    type = ''
-    arraytype = 0
-    description = ''
-    unit = Unit()
-    datavalues = []
-    datavaluetype = ''
+    def __init__(self):
+        self.type = ''
+        self.arraytype = 0
+        self.description = ''
+        self.unit = Unit()
+        self.datavalues = []
+        self.datavaluetype = ''
      
 class Yaxisdataarray:
-    type = ''
-    arraytype = 0
-    description = ''
-    unit = Unit()
-    datavalues = []
-    datavaluetype = ''
+    def __init__(self):
+        self.type = ''
+        self.arraytype = 0
+        self.description = ''
+        self.unit = Unit()
+        self.datavalues = []
+        self.datavaluetype = ''
 
 class Peaklist:
-    peaktpe = 0
-    left = 0
-    right = 0
-    peak = 0
-    isign = 0
+    def __init__(self):
+        self.peaktpe = 0
+        self.left = 0
+        self.right = 0
+        self.peak = 0
+        self.isign = 0
 
 class Curve:
-    appearance = Appearance()
-    title = ''
-    hash = []
-    type = ''
-    xaxis = 0
-    yaxis = 0
-    xaxisdataarray = Xaxisdataarray()
-    yaxisdataarray = Yaxisdataarray()
-    meastype = 0
-    peaklist = []
-    corrosionbutlervolmer = []
-    corrosiontafel = []
+    def __init__(self):
+        self.appearance = Appearance()
+        self.title = ''
+        self.hash = []
+        self.type = ''
+        self.xaxis = 0
+        self.yaxis = 0
+        self.xaxisdataarray = Xaxisdataarray()
+        self.yaxisdataarray = Yaxisdataarray()
+        self.meastype = 0
+        self.peaklist = []
+        self.corrosionbutlervolmer = []
+        self.corrosiontafel = []
     
 class Measurement:
-        title = ''
-        timestamp = object()
-        utctimestamp = object()
-        deviceused = 0
-        deviceserial = ''
-        devicefw = ''
-        type = ''
-        dataset = Dataset()
-        method = ''
-        curves = []
-        eisdatalist = []
+    def __init__(self):
+        self.title = ''
+        self.timestamp = object()
+        self.utctimestamp = object()
+        self.deviceused = 0
+        self.deviceserial = ''
+        self.devicefw = ''
+        self.type = ''
+        self.dataset = Dataset()
+        self.method = ''
+        self.curves = []
+        self.eisdatalist = []
         
 class Data:
-    type = ''
-    coreversion = ''
-    methodformeasurement = ''
-    measurements = []
+    def __init__(self):
+        self.type = ''
+        self.coreversion = ''
+        self.methodformeasurement = ''
+        self.measurements = []
     
 class MethodType:
-    CV = 'CV'
-    SWV = 'SWV'
-    EIS = 'EIS'
-    All = ''
+    def __init__(self):    
+        self.CV = 'CV'
+        self.SWV = 'SWV'
+        self.EIS = 'EIS'
+        self.All = ''
     
 class Baseline:
     def __init__(self):
