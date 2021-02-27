@@ -17,9 +17,14 @@
 
 **How to use:**
 
-Create the PSSource object that will contain all your data. The object creation automatically load the data into the object:
+Import PSData:
 ```
-data = PS.PSSource(r'..\File.pssession')
+import PSData as PS
+```
+
+Create the data object that will contain all your experiment information. The object creation automatically load the data into the object:
+```
+data = PS.jparse(r'..\File.pssession')
 ```
 
 You can then plot the data by using:
@@ -34,4 +39,5 @@ and that is about all you need to get started!
 - ```data.baseline``` (only available for SWV):
   - ```.startPosition``` set to int value of the position that you want to use for the baseline. Must be set for baseline to work.
   - ```.endPosition``` set to int value of the position that you want to use for the baseline. If not set, taken as ```len(measurements) - startPosition```
-  - ~~```.subtractBaseline``` set to True to plot the subtracted values~~ This is done automatically when you set ```startPosition```
+- ```.experimentList``` gives you all of the tags for the experimets that are in the object.
+- ```.plot(['SWV 1','CV 1'])``` or ```.plot([data.experimentList[0],data.experimentList[5]])``` will only plot the experiments with these tags. The plot legend also contains the experiment tags.
