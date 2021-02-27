@@ -56,3 +56,5 @@ ToDo:
 - [ ] Curve smoothing with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)
 - [ ] Peak detection
 - [ ] Dynamic baseline by using the first and second derivatives
+- [ ] Method summary printout and experiment grouping
+- [ ] % peak comparison printout for grouped experiments
