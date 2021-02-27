@@ -1,6 +1,6 @@
 # PSData in python
  Load a .pssession file into python for local processing.
- I do a bunch of Cyclic Voltammetry and Square Wave Voltammetry experiments regularly and wrote this Python script to extact my data for some post-processing. The main purpose is to skip additional export steps from the .pssession file, but I added plotting and baseline tools. I use [this](https://www.palmsens.com/product/palmsens4/) device for my measurements.
+ I do a bunch of [Cyclic Voltammetry](https://en.wikipedia.org/wiki/Cyclic_voltammetry) and [Square Wave Voltammetry](https://en.wikipedia.org/wiki/Squarewave_voltammetry) experiments regularly and wrote this Python script to extact my data for some post-processing. The main purpose is to skip additional export steps from the .pssession file, but I added plotting and baseline tools. I use [this](https://www.palmsens.com/product/palmsens4/) device for my measurements.
  
  **Get started:**
  
@@ -41,3 +41,13 @@ and that is about all you need to get started!
   - ```.endPosition``` set to int value of the position that you want to use for the baseline. If not set, taken as ```len(measurements) - startPosition```
 - ```.experimentList``` gives you all of the tags for the experimets that are in the object.
 - ```.plot(['SWV 1','CV 1'])``` or ```.plot([data.experimentList[0],data.experimentList[5]])``` will only plot the experiments with these tags. The plot legend also contains the experiment tags.
+
+**Example plots:**
+
+Here is a raw SWV experiment plot:
+
+![SWV Raw](https://drive.google.com/uc?export=view&id=1cSfbIJnPDbMwvZKf04IyDE6yvJHXTZba)
+
+and then I did some baseline subtraction:
+
+![SWV Baseline](https://drive.google.com/uc?export=view&id=1bp-EswtDpwZAEcG7yr4WBwHFOkk-176E)
