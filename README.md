@@ -48,6 +48,11 @@ Here is a raw SWV experiment plot:
 
 ![SWV Raw](https://drive.google.com/uc?export=view&id=1cSfbIJnPDbMwvZKf04IyDE6yvJHXTZba)
 
-and then I did some baseline subtraction:
+and then I did a baseline subtraction on starting position 7:
 
 ![SWV Baseline](https://drive.google.com/uc?export=view&id=1bp-EswtDpwZAEcG7yr4WBwHFOkk-176E)
+
+ToDo:
+- [ ] Curve smoothing with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)
+- [ ] Peak detection
+- [ ] Dynamic baseline by using the first and second derivatives
