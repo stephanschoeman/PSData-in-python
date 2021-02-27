@@ -160,11 +160,11 @@ class Baseline:
                 print('Exception: Could not generate baseline. Check validity of startPosition and endPosition.')
             
     def subtract(self, x, y):
-        if self.__subtractBaseline:
+        if self.__subtractBaseline and self.__generatedBaseline:
             return (y - (self.__gradient*x + self.__constant))
         return y
 
-class PSSource:
+class jparse:
     @property
     def methodFilter(self):
         return self._methodFilter
@@ -173,6 +173,10 @@ class PSSource:
     def methodFilter(self, val):
         self.__filterOnMethod = True
         self._methodFilter = val
+    
+    @property
+    def experimentList(self):
+        return self._experimentList
     
     def __init__(self, filename):
         self.__filterOnMethod = False
@@ -183,6 +187,11 @@ class PSSource:
         self.units_on = True
         self.title = ''
         self.__jsonParsed = False
+        self._experimentList = []
+        self.data = self.__parse(filename)
+       
+        
+    def __parse(self, filename):
         try:
             f = open(filename, "rb")
             data = f.read().decode('utf-16').replace('\r\n',' ').replace(':true',r':"True"').replace(':false',r':"False"')
@@ -197,38 +206,40 @@ class PSSource:
             self.__jsonParsed = True
         except:
             print('Failed to parse string to JSON')
+            return
         
-    def plot(self):
+        try:
+            for measurement in self.Data.measurements:
+                currentMethod = self.__getMethodType(measurement.method).upper()
+                index = len([i for i, s in enumerate(self._experimentList) if currentMethod in s])
+                self._experimentList.append(currentMethod + ' ' + str(index + 1))
+        except:
+            print('Failed to generate property: experimentList')
+            return
+                
+    def plot(self, experimentLabels = ''):
         # Experimental, use at own risk
         if not self.__jsonParsed:
             return
         
-        shortlistOfMethods = {}
         units = []
-        CanPlotAll = False
-            
+        canPlotAll = False
+        experimentIndex = 0    
         for measurement in self.Data.measurements:
             canplot = True
             currentMethod = self.__getMethodType(measurement.method).upper()
             
             if self.__filterOnMethod and not currentMethod in self._methodFilter:
                 canplot = False
-            
-            if canplot:
-                if currentMethod in shortlistOfMethods:
-                    shortlistOfMethods[currentMethod] = shortlistOfMethods[currentMethod] + 1
-                    i = shortlistOfMethods[currentMethod]
-                else:
-                    i = 1
-                    shortlistOfMethods[currentMethod] = i
-                currentLabel = currentMethod + ' ' + str(i)
                 
+            if not experimentLabels == '' and canplot:
+                canplot =  self._experimentList[experimentIndex] in experimentLabels
+                
+                
+            if canplot:
                 for curve in measurement.curves:
-                    if self.methodFilter is self.methodType.SWV:
+                    if currentMethod in self.methodType.SWV:
                         self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
-                    elif len(units) <= 0: #hopefully only 1 print, but not important
-                        print("Cannot do baseline subtraction for any other method but SWV, yet!")
-                    
                     if self.units_on and len(units) <= 0:
                         units.append(self.__getUnits(curve.title))
                             
@@ -238,12 +249,16 @@ class PSSource:
                     
                     for y in curve.yaxisdataarray.datavalues:
                         xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
-                        yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
+                        if currentMethod in self.methodType.SWV:
+                            yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
+                        else:
+                            yvalues.append(y.v)
                         pos = pos + 1
-                    plt.plot(xvalues, yvalues, label=currentLabel)
-                    CanPlotAll = True
+                    plt.plot(xvalues, yvalues, label=self._experimentList[experimentIndex])
+                    canPlotAll = True
+            experimentIndex = experimentIndex + 1
                     
-        if CanPlotAll:
+        if canPlotAll:
             plt.grid(True)
             if self.legend_on:
                 plt.legend(bbox_to_anchor=(1.05,1.05))
@@ -253,7 +268,10 @@ class PSSource:
             if self.title is not '':
                 plt.title(self.title)
         else:
-            print('No data found for: ' + self.methodFilter)
+            if not self._methodFilter in experimentLabels:
+                print('All plot() arguments are filtered out by the method filter')
+            else:
+                print('No data found for: ' + self.methodFilter)
 
     def __getUnits(self, curveTitle):
         details = curveTitle.split(" ")

@@ -9,9 +9,9 @@ This is an example on how to use the PSData.py file
 import PSData as PS
 
 # just paste the file source here:
-data = PS.PSSource(r'filelocation\A.pssession')
-data.methodFilter = data.methodType.SWV
-#data.baseline.startPosition = 5
+data = PS.jparse(r'C:\Users\Stephan\Documents\PhD\Testing\20210220\H.pssession')
+#data.methodFilter = data.methodType.CV
+data.baseline.startPosition = 5
 data.plot()
 
 """
@@ -23,12 +23,14 @@ methodFilter = all by default. Options are SWV, CV, and EIS. All string values.
 baseline creates a linear baseline using a start and end position on each curve
 data.baseline.startPosition = set to int value
 data.baseline.endPosition = set to end - startPosition if left empty
-data.baseline.subtractBaseline = must be True to subtract baseline
+
+data.plot([]) takes in the experiment lables to plot specific experiments. This can be accessed by data.experimentList.
+  The order of the labels do not matter
 
 There is quite a bit of data within the PSData object that is usable
 For example, the curve.title contains the units and method used in the experiment and the measurement.method has useful information
 
 You can view the object structure in the PSData.py file for more information
-or you can print the text (data2, line 118) and paste it in an online json converter for easy viewing
+or you can print the text (data2, in ) and paste it in an online json converter
 
 """
