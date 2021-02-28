@@ -1,6 +1,6 @@
 # PSData in python
  Load a .pssession file into python for local processing.
- I do a bunch of Cyclic Voltammetry and Square Wave Voltammetry experiments regularly and wrote this Python script to extact my data for some post-processing. The main purpose is to skip additional export steps from the .pssession file, but I added plotting and baseline tools. I use [this](https://www.palmsens.com/product/palmsens4/) device for my measurements.
+ I do a bunch of [Cyclic Voltammetry](https://en.wikipedia.org/wiki/Cyclic_voltammetry) and [Square Wave Voltammetry](https://en.wikipedia.org/wiki/Squarewave_voltammetry) experiments regularly and wrote this Python script to extact my data for some post-processing. The main purpose is to skip additional export steps from the .pssession file, but I added plotting and baseline tools. I use [this](https://www.palmsens.com/product/palmsens4/) device for my measurements.
  
  **Get started:**
  
@@ -17,9 +17,14 @@
 
 **How to use:**
 
-Create the PSSource object that will contain all your data. The object creation automatically load the data into the object:
+Import PSData:
 ```
-data = PS.PSSource(r'..\File.pssession')
+import PSData as PS
+```
+
+Create the data object that will contain all your experiment information. The object creation automatically load the data into the object:
+```
+data = PS.jparse(r'..\File.pssession')
 ```
 
 You can then plot the data by using:
@@ -34,4 +39,22 @@ and that is about all you need to get started!
 - ```data.baseline``` (only available for SWV):
   - ```.startPosition``` set to int value of the position that you want to use for the baseline. Must be set for baseline to work.
   - ```.endPosition``` set to int value of the position that you want to use for the baseline. If not set, taken as ```len(measurements) - startPosition```
-  - ~~```.subtractBaseline``` set to True to plot the subtracted values~~ This is done automatically when you set ```startPosition```
+- ```.experimentList``` gives you all of the tags for the experimets that are in the object.
+- ```.plot(['SWV 1','CV 1'])``` or ```.plot([data.experimentList[0],data.experimentList[5]])``` will only plot the experiments with these tags. The plot legend also contains the experiment tags.
+
+**Example plots:**
+
+Here is a raw SWV experiment plot:
+
+![SWV Raw](https://drive.google.com/uc?export=view&id=1cSfbIJnPDbMwvZKf04IyDE6yvJHXTZba)
+
+and then I did a baseline subtraction on starting position 7:
+
+![SWV Baseline](https://drive.google.com/uc?export=view&id=1bp-EswtDpwZAEcG7yr4WBwHFOkk-176E)
+
+ToDo:
+- [ ] Curve smoothing with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)
+- [ ] Peak detection
+- [ ] Dynamic baseline by using the first and second derivatives
+- [ ] Method summary printout and experiment grouping
+- [ ] % peak comparison printout for grouped experiments
