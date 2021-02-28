@@ -54,7 +54,7 @@ and then I did a baseline subtraction on starting position 7:
 
 Here is an example of an EIS measurement plot:
 
-![EIS Raw](https://drive.google.com/uc?export=view&id=1LgGRnaa8AWNNo8zdCwlcZu1N-aJ58Zhm)
+![EIS Raw](https://drive.google.com/uc?export=view&id=1-HvuJfHDtJeVflLOh3hmkf1RPH5pqiqc)
 
 Let me know if you have ideas for additional basic functionality.
 
