@@ -52,6 +52,12 @@ and then I did a baseline subtraction on starting position 7:
 
 ![SWV Baseline](https://drive.google.com/uc?export=view&id=1bp-EswtDpwZAEcG7yr4WBwHFOkk-176E)
 
+Here is an example of an EIS measurement plot:
+
+![EIS Raw](https://drive.google.com/uc?export=view&id=1LgGRnaa8AWNNo8zdCwlcZu1N-aJ58Zhm)
+
+Let me know if you have ideas for additional basic functionality.
+
 ToDo:
 - [ ] Curve smoothing with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)
 - [ ] Peak detection
