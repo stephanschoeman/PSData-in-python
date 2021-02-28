@@ -2,6 +2,11 @@
  Load a .pssession file into python for local processing.
  I do a bunch of [Cyclic Voltammetry](https://en.wikipedia.org/wiki/Cyclic_voltammetry) and [Square Wave Voltammetry](https://en.wikipedia.org/wiki/Squarewave_voltammetry) experiments regularly and wrote this Python script to extact my data for some post-processing. The main purpose is to skip additional export steps from the .pssession file, but I added plotting and baseline tools. I use [this](https://www.palmsens.com/product/palmsens4/) device for my measurements.
  
+ **Supported experiments:**
+ - Square wave voltammetry (primary)
+ - Cyclic voltammetry
+ - Electrical impedance spectroscopy
+ 
  **Get started:**
  
  Download and install the dependencies if required.
