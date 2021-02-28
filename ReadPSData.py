@@ -9,9 +9,9 @@ This is an example on how to use the PSData.py file
 import PSData as PS
 
 # just paste the file source here:
-data = PS.jparse(r'C:\Users\Stephan\Documents\PhD\Testing\20210220\H.pssession')
-#data.methodFilter = data.methodType.CV
-data.baseline.startPosition = 5
+data = PS.jparse(r'filelocation\A.pssession')
+#data.methodFilter = data.methodType.SWV
+#data.baseline.startPosition = 5
 data.plot()
 
 """

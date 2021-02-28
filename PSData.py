@@ -27,6 +27,18 @@ class Datavalue:
         self.v = 0.0
         self.s = 0
         self.c = 0
+        self.t = ''
+        
+class Eisdatalist:
+    def __init__(self):
+        self.appearance = Appearance()
+        self.title = ''
+        self.hash = []
+        self.scantype = 0
+        self.freqype = 0
+        self.cdc = object()
+        self.fitvalues = object()
+        self.dataset = Dataset()
     
 class Value:
     def __init__(self):
@@ -164,7 +176,26 @@ class Baseline:
             return (y - (self.__gradient*x + self.__constant))
         return y
 
+class EISMeasurementTypes:
+    def __init__(self):
+        self.freq = "Frequency"
+        self.zdash = "Z'"
+        self.potential = "Potential"
+        self.zdashneg = "-Z''"
+        self.Z = "Z"
+        self.phase = "-Phase"
+        self.current = "Current"
+        self.npoints = "npoints"
+        self.tint = "tint"
+        self.ymean = "ymean"
+        self.debugtext = "debugtext"
+        self.Y = "Y"
+        self.YRe = "YRe"
+        self.YIm = "YIm"
+
 class jparse:
+    strData = ''
+    
     @property
     def methodFilter(self):
         return self._methodFilter
@@ -188,6 +219,7 @@ class jparse:
         self.title = ''
         self.__jsonParsed = False
         self._experimentList = []
+        self.__eisTypes = EISMeasurementTypes()
         self.data = self.__parse(filename)
        
         
@@ -235,27 +267,31 @@ class jparse:
             if not experimentLabels == '' and canplot:
                 canplot =  self._experimentList[experimentIndex] in experimentLabels
                 
-                
             if canplot:
-                for curve in measurement.curves:
-                    if currentMethod in self.methodType.SWV:
-                        self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
-                    if self.units_on and len(units) <= 0:
-                        units.append(self.__getUnits(curve.title))
-                            
-                    xvalues = []
-                    yvalues = []
-                    pos = 0
-                    
-                    for y in curve.yaxisdataarray.datavalues:
-                        xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
+                xvalues = []
+                yvalues = []
+                if not currentMethod in self.methodType.EIS:
+                    for curve in measurement.curves:
                         if currentMethod in self.methodType.SWV:
-                            yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
-                        else:
-                            yvalues.append(y.v)
-                        pos = pos + 1
-                    plt.plot(xvalues, yvalues, label=self._experimentList[experimentIndex])
-                    canPlotAll = True
+                            self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
+                        if self.units_on and len(units) <= 0:
+                            units.append(self.__getUnits(curve.title))
+                                
+                        pos = 0
+                        
+                        for y in curve.yaxisdataarray.datavalues:
+                            xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
+                            if currentMethod in self.methodType.SWV:
+                                yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
+                            else:
+                                yvalues.append(y.v)
+                            pos = pos + 1
+                        plt.plot(xvalues, yvalues, label=self._experimentList[experimentIndex])
+                        canPlotAll = True
+                else:
+                   self. __EISAnalysis(measurement)
+                   canPlotAll = True
+            
             experimentIndex = experimentIndex + 1
                     
         if canPlotAll:
@@ -267,11 +303,44 @@ class jparse:
                 plt.ylabel(units[0][1])
             if self.title is not '':
                 plt.title(self.title)
+            plt.show()
         else:
             if not self._methodFilter in experimentLabels:
                 print('All plot() arguments are filtered out by the method filter')
             else:
                 print('No data found for: ' + self.methodFilter)
+                
+    def __EISAnalysis(self, measurement):
+        eisdata = {}                    
+        for eis in measurement.eisdatalist:
+            for value in eis.dataset.values:
+                v = []
+                for c in value.datavalues:
+                    val = c.v
+                    if value.unit.q == self.__eisTypes.zdash or value.unit.q == self.__eisTypes.zdashneg:
+                        val = c.v/1000000
+                    v.append(val)
+                eisdata[value.unit.q] = v                                    
+        
+        fig, ax1 = plt.subplots()
+        plt.grid(True)
+        ax2 = ax1.twinx()
+        ax1.loglog(eisdata[self.__eisTypes.freq], eisdata[self.__eisTypes.Z], 'g-', label = self.__eisTypes.Z)
+        ax2.plot(eisdata[self.__eisTypes.freq], eisdata[self.__eisTypes.phase], 'b-', label = self.__eisTypes.phase)
+        b, t = ax1.get_ylim()
+        b2, t2 = ax2.get_ylim()
+        ax1.set_ylim([b/10, t*3])
+        ax2.set_ylim([b2 - 10,t2 + 10])
+        ax1.set_xlabel(self.__eisTypes.freq)
+        ax1.set_ylabel(self.__eisTypes.Z + "/$\Omega$")
+        ax2.set_ylabel(self.__eisTypes.phase + "/$^\circ$")
+        
+        fig2, ax3 = plt.subplots()
+        ax3.plot(eisdata[self.__eisTypes.zdash], eisdata[self.__eisTypes.zdashneg], 'b-')
+        ax3.set_xlabel(self.__eisTypes.zdashneg + "/M$\Omega$")
+        ax3.set_ylabel(self.__eisTypes.zdash + "/M$\Omega$")      
+                      
+        self.legend_on = False
 
     def __getUnits(self, curveTitle):
         details = curveTitle.split(" ")
