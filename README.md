@@ -27,7 +27,7 @@ Import PSData:
 import PSData as PS
 ```
 
-Create the data object that will contain all your experiment information. The object creation automatically load the data into the object:
+Create the data object that will contain all your experiment information. The object creation automatically loads the data into the object:
 ```
 data = PS.jparse([r'..\File.pssession'])
 ```
