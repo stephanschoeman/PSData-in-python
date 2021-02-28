@@ -176,7 +176,7 @@ class Baseline:
             return (y - (self.__gradient*x + self.__constant))
         return y
 
-class EISMeasurementTypes:
+class EISMeasurement:
     def __init__(self):
         self.freq = "Frequency"
         self.zdash = "Z'"
@@ -192,10 +192,9 @@ class EISMeasurementTypes:
         self.Y = "Y"
         self.YRe = "YRe"
         self.YIm = "YIm"
+        self.scale = 100000 # standard set to mega ohms
 
-class jparse:
-    strData = ''
-    
+class jparse:    
     @property
     def methodFilter(self):
         return self._methodFilter
@@ -219,7 +218,7 @@ class jparse:
         self.title = ''
         self.__jsonParsed = False
         self._experimentList = []
-        self.__eisTypes = EISMeasurementTypes()
+        self.eisTypes = EISMeasurement()
         self.data = self.__parse(filename)
        
         
@@ -234,20 +233,21 @@ class jparse:
             
         try:
             data2 = data[0:(len(data) - 1)] # has a weird character at the end
-            self.Data = json.loads(data2, object_hook=lambda d: SimpleNamespace(**d))
+            parsedData = json.loads(data2, object_hook=lambda d: SimpleNamespace(**d))
             self.__jsonParsed = True
         except:
             print('Failed to parse string to JSON')
             return
         
         try:
-            for measurement in self.Data.measurements:
+            for measurement in parsedData.measurements:
                 currentMethod = self.__getMethodType(measurement.method).upper()
                 index = len([i for i, s in enumerate(self._experimentList) if currentMethod in s])
                 self._experimentList.append(currentMethod + ' ' + str(index + 1))
         except:
             print('Failed to generate property: experimentList')
             return
+        return parsedData
                 
     def plot(self, experimentLabels = ''):
         # Experimental, use at own risk
@@ -257,7 +257,7 @@ class jparse:
         units = []
         canPlotAll = False
         experimentIndex = 0    
-        for measurement in self.Data.measurements:
+        for measurement in self.data.measurements:
             canplot = True
             currentMethod = self.__getMethodType(measurement.method).upper()
             
@@ -276,9 +276,7 @@ class jparse:
                             self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
                         if self.units_on and len(units) <= 0:
                             units.append(self.__getUnits(curve.title))
-                                
                         pos = 0
-                        
                         for y in curve.yaxisdataarray.datavalues:
                             xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
                             if currentMethod in self.methodType.SWV:
@@ -289,9 +287,8 @@ class jparse:
                         plt.plot(xvalues, yvalues, label=self._experimentList[experimentIndex])
                         canPlotAll = True
                 else:
-                   self. __EISAnalysis(measurement)
+                   self.__EISAnalysis(measurement)
                    canPlotAll = True
-            
             experimentIndex = experimentIndex + 1
                     
         if canPlotAll:
@@ -317,30 +314,41 @@ class jparse:
                 v = []
                 for c in value.datavalues:
                     val = c.v
-                    if value.unit.q == self.__eisTypes.zdash or value.unit.q == self.__eisTypes.zdashneg:
-                        val = c.v/1000000
+                    if value.unit.q == self.eisTypes.zdash or value.unit.q == self.eisTypes.zdashneg:
+                        val = c.v/self.eisTypes.scale
                     v.append(val)
                 eisdata[value.unit.q] = v                                    
         
         fig, ax1 = plt.subplots()
         plt.grid(True)
         ax2 = ax1.twinx()
-        ax1.loglog(eisdata[self.__eisTypes.freq], eisdata[self.__eisTypes.Z], 'g-', label = self.__eisTypes.Z)
-        ax2.plot(eisdata[self.__eisTypes.freq], eisdata[self.__eisTypes.phase], 'b-', label = self.__eisTypes.phase)
+        ax1.loglog(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.Z], 'gs-', label = self.eisTypes.Z)
+        ax2.plot(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.phase], 'b*-', label = self.eisTypes.phase)
         b, t = ax1.get_ylim()
         b2, t2 = ax2.get_ylim()
         ax1.set_ylim([b/10, t*3])
         ax2.set_ylim([b2 - 10,t2 + 10])
-        ax1.set_xlabel(self.__eisTypes.freq)
-        ax1.set_ylabel(self.__eisTypes.Z + "/$\Omega$")
-        ax2.set_ylabel(self.__eisTypes.phase + "/$^\circ$")
+        ax1.set_xlabel(self.eisTypes.freq)
+        ax1.set_ylabel(self.eisTypes.Z + "/$\Omega$")
+        ax2.set_ylabel(self.eisTypes.phase + "/$^\circ$")
         
         fig2, ax3 = plt.subplots()
-        ax3.plot(eisdata[self.__eisTypes.zdash], eisdata[self.__eisTypes.zdashneg], 'b-')
-        ax3.set_xlabel(self.__eisTypes.zdashneg + "/M$\Omega$")
-        ax3.set_ylabel(self.__eisTypes.zdash + "/M$\Omega$")      
+        ax3.plot(eisdata[self.eisTypes.zdash], eisdata[self.eisTypes.zdashneg], 'bo-')
+        ax3.set_xlabel(self.eisTypes.zdashneg + "/" + self.__getScale() + "$\Omega$")
+        ax3.set_ylabel(self.eisTypes.zdash + "/" + self.__getScale() + "$\Omega$")      
                       
         self.legend_on = False
+        
+    def __getScale(self):
+        if self.eisTypes.scale == pow(10,3):
+            return 'k'
+        if self.eisTypes.scale == pow(10,6):
+            return 'M'
+        if self.eisTypes.scale == pow(10,9):
+            return 'G'
+        if self.eisTypes.scale == pow(10,12):
+            return 'T'
+        return ''
 
     def __getUnits(self, curveTitle):
         details = curveTitle.split(" ")
