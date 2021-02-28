@@ -41,6 +41,7 @@ and that is about all you need to get started!
   - ```.endPosition``` set to int value of the position that you want to use for the baseline. If not set, taken as ```len(measurements) - startPosition```
 - ```.experimentList``` gives you all of the tags for the experimets that are in the object.
 - ```.plot(['SWV 1','CV 1'])``` or ```.plot([data.experimentList[0],data.experimentList[5]])``` will only plot the experiments with these tags. The plot legend also contains the experiment tags.
+- ```.eisTypes.scale = 1000``` sets the scale of the Nyquist plot. Usable scales: k, M, G, T. You can expand this list as required.
 
 **Example plots:**
 
