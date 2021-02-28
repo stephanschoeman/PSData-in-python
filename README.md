@@ -35,7 +35,7 @@ data.plot()
 and that is about all you need to get started!
 
 **Additional functionality (so far):**
-- ```data.methodFilter = data.methodType.SWV``` will filter all plots on SWV. Also available: CV and EIS (not tested)
+- ```data.methodFilter = data.methodType.SWV``` will filter all plots on SWV. Also available: CV and EIS
 - ```data.baseline``` (only available for SWV):
   - ```.startPosition``` set to int value of the position that you want to use for the baseline. Must be set for baseline to work.
   - ```.endPosition``` set to int value of the position that you want to use for the baseline. If not set, taken as ```len(measurements) - startPosition```
@@ -51,6 +51,12 @@ Here is a raw SWV experiment plot:
 and then I did a baseline subtraction on starting position 7:
 
 ![SWV Baseline](https://drive.google.com/uc?export=view&id=1bp-EswtDpwZAEcG7yr4WBwHFOkk-176E)
+
+Here is an example of an EIS measurement plot:
+
+![EIS Raw](https://drive.google.com/uc?export=view&id=1-HvuJfHDtJeVflLOh3hmkf1RPH5pqiqc)
+
+Let me know if you have ideas for additional basic functionality.
 
 ToDo:
 - [ ] Curve smoothing with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)
