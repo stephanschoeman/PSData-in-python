@@ -47,6 +47,9 @@ and that is about all you need to get started!
 - ```.experimentList``` gives you all of the tags for the experimets that are in the object.
 - ```.plot(['SWV 1','CV 1'])``` or ```.plot([data.experimentList[0],data.experimentList[5]])``` will only plot the experiments with these tags. The plot legend also contains the experiment tags.
 - ```.eisTypes.scale = 1000``` sets the scale of the Nyquist plot. Usable scales: k, M, G, T. You can expand this list as required.
+- The datapoints within the experiments are stored in a dictionary ```.datapoints```. This can be accessed via the experiments labels ```data.datapoints[data.experimentList[0]]``` or ```data.datapoints['CV 1']```. EIS data is stored in an EIS object and has a few different tags, while all other measurements are stored in an axis object with xvalues and yvalues:
+  - EIS phase, for example: ```data.datapoints[data.experimentList[i]]['-Phase']``` You can view the EIS tags within the ```.eisTypes``` object.
+  - X-axis values for all other: ```data.datapoints[data.experimentList[i]].xvalues```
 
 **Example plots:**
 
