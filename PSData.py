@@ -194,6 +194,11 @@ class EISMeasurement:
         self.YIm = "YIm"
         self.scale = 100000 # standard set to mega ohms
 
+class axis:
+    def __init__(self):
+        self.xvalues = []
+        self.yvalues = []
+
 class jparse:    
     @property
     def methodFilter(self):
@@ -219,6 +224,7 @@ class jparse:
         self.__jsonParsed = False
         self._experimentList = []
         self.eisTypes = EISMeasurement()
+        self.datapoints = {}
         self.data = self.__parse(filename)
        
         
@@ -258,6 +264,7 @@ class jparse:
         canPlotAll = False
         experimentIndex = 0    
         for measurement in self.data.measurements:
+            xyValues = {}
             canplot = True
             currentMethod = self.__getMethodType(measurement.method).upper()
             
@@ -271,6 +278,7 @@ class jparse:
                 xvalues = []
                 yvalues = []
                 if not currentMethod in self.methodType.EIS:
+                    ax = axis()
                     for curve in measurement.curves:
                         if currentMethod in self.methodType.SWV:
                             self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
@@ -284,10 +292,13 @@ class jparse:
                             else:
                                 yvalues.append(y.v)
                             pos = pos + 1
+                        ax.xvalues = xvalues
+                        ax.yvalues = yvalues
+                        self.datapoints[self._experimentList[experimentIndex]] = ax
                         plt.plot(xvalues, yvalues, label=self._experimentList[experimentIndex])
                         canPlotAll = True
                 else:
-                   self.__EISAnalysis(measurement)
+                   self.__EISAnalysis(measurement, experimentIndex)
                    canPlotAll = True
             experimentIndex = experimentIndex + 1
                     
@@ -307,7 +318,7 @@ class jparse:
             else:
                 print('No data found for: ' + self.methodFilter)
                 
-    def __EISAnalysis(self, measurement):
+    def __EISAnalysis(self, measurement, experimentIndex):
         eisdata = {}                    
         for eis in measurement.eisdatalist:
             for value in eis.dataset.values:
@@ -335,8 +346,8 @@ class jparse:
         fig2, ax3 = plt.subplots()
         ax3.plot(eisdata[self.eisTypes.zdash], eisdata[self.eisTypes.zdashneg], 'bo-')
         ax3.set_xlabel(self.eisTypes.zdashneg + "/" + self.__getScale() + "$\Omega$")
-        ax3.set_ylabel(self.eisTypes.zdash + "/" + self.__getScale() + "$\Omega$")      
-                      
+        ax3.set_ylabel(self.eisTypes.zdash + "/" + self.__getScale() + "$\Omega$")
+        self.datapoints[self.experimentList[experimentIndex]] = eisdata
         self.legend_on = False
         
     def __getScale(self):
