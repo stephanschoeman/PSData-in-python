@@ -225,90 +225,117 @@ class jparse:
         self._experimentList = []
         self.eisTypes = EISMeasurement()
         self.datapoints = {}
+        self.files = []
         self.data = self.__parse(filename)
+        self.__plots = {}
+        self.splitGraphs = False
        
         
-    def __parse(self, filename):
+    def __parse(self, filenames):
+        self.__getFilenames(filenames)
+        
         try:
-            f = open(filename, "rb")
-            data = f.read().decode('utf-16').replace('\r\n',' ').replace(':true',r':"True"').replace(':false',r':"False"')
-            f.close
+            index = 0
+            readData = {}
+            for filename in filenames:
+                f = open(filename, "rb")
+                readData[self.files[index]] = f.read().decode('utf-16').replace('\r\n',' ').replace(':true',r':"True"').replace(':false',r':"False"')
+                index = index + 1
+                f.close
         except:
             print('Could not find or open file: ' + filename)
             return
             
         try:
-            data2 = data[0:(len(data) - 1)] # has a weird character at the end
-            parsedData = json.loads(data2, object_hook=lambda d: SimpleNamespace(**d))
+            parsedData = {}
+            for file in self.files:
+                data2 = readData[file][0:(len(readData[file]) - 1)] # has a weird character at the end
+                parsedData[file] = json.loads(data2, object_hook=lambda d: SimpleNamespace(**d))
             self.__jsonParsed = True
         except:
             print('Failed to parse string to JSON')
             return
         
         try:
-            for measurement in parsedData.measurements:
-                currentMethod = self.__getMethodType(measurement.method).upper()
-                index = len([i for i, s in enumerate(self._experimentList) if currentMethod in s])
-                self._experimentList.append(currentMethod + ' ' + str(index + 1))
+            for file in self.files:
+                for measurement in parsedData[file].measurements:
+                    currentMethod = self.__getMethodType(measurement.method).upper()
+                    index = len([i for i, s in enumerate(self._experimentList) if currentMethod in s])
+                    self._experimentList.append(currentMethod + ' ' + str(index + 1))
         except:
             print('Failed to generate property: experimentList')
             return
         return parsedData
+    
+    def __getFilenames(self, files):
+        for f in files:
+            file = f.split('\\')
+            name = file[len(file) - 1].replace('.pssession','')
+            self.files.append(name)
                 
     def plot(self, experimentLabels = ''):
         # Experimental, use at own risk
         if not self.__jsonParsed:
             return
         
-        units = []
-        canPlotAll = False
-        experimentIndex = 0    
-        for measurement in self.data.measurements:
-            xyValues = {}
-            canplot = True
-            currentMethod = self.__getMethodType(measurement.method).upper()
+        experimentIndex = 0
+        for file in self.files:
+            data = self.data[file]
+            units = []
+            canPlotAll = False
             
-            if self.__filterOnMethod and not currentMethod in self._methodFilter:
-                canplot = False
+            
+            for measurement in data.measurements:
+                canplot = True
+                currentMethod = self.__getMethodType(measurement.method).upper()
                 
-            if not experimentLabels == '' and canplot:
-                canplot =  self._experimentList[experimentIndex] in experimentLabels
-                
-            if canplot:
-                xvalues = []
-                yvalues = []
-                if not currentMethod in self.methodType.EIS:
-                    ax = axis()
-                    for curve in measurement.curves:
-                        if currentMethod in self.methodType.SWV:
-                            self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
-                        if self.units_on and len(units) <= 0:
-                            units.append(self.__getUnits(curve.title))
-                        pos = 0
-                        for y in curve.yaxisdataarray.datavalues:
-                            xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
+                if self.__filterOnMethod and not currentMethod in self._methodFilter:
+                    canplot = False
+                    
+                if not experimentLabels == '' and canplot:
+                    canplot =  self._experimentList[experimentIndex] in experimentLabels
+                    
+                if canplot:
+                    xvalues = []
+                    yvalues = []
+                    if not currentMethod in self.methodType.EIS:
+                        if self.splitGraphs:
+                            figx, axx = plt.subplots()
+                            axx.grid(True)
+                        ax = axis()
+                        for curve in measurement.curves:
                             if currentMethod in self.methodType.SWV:
-                                yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
-                            else:
-                                yvalues.append(y.v)
-                            pos = pos + 1
-                        ax.xvalues = xvalues
-                        ax.yvalues = yvalues
-                        self.datapoints[self._experimentList[experimentIndex]] = ax
-                        plt.plot(xvalues, yvalues, label=self._experimentList[experimentIndex])
-                        canPlotAll = True
-                else:
-                   self.__EISAnalysis(measurement, experimentIndex)
-                   canPlotAll = True
-            experimentIndex = experimentIndex + 1
+                                self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
+                            if self.units_on and len(units) <= 0:
+                                units.append(self.__getUnits(curve.title))
+                                if not self.splitGraphs:
+                                    figx, axx = plt.subplots()
+                            pos = 0
+                            for y in curve.yaxisdataarray.datavalues:
+                                xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
+                                if currentMethod in self.methodType.SWV:
+                                    yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
+                                else:
+                                    yvalues.append(y.v)
+                                pos = pos + 1
+                            ax.xvalues = xvalues
+                            ax.yvalues = yvalues
+                            self.datapoints[self._experimentList[experimentIndex]] = ax
+                            if self.units_on:
+                                axx.set_xlabel(units[0][0])
+                                axx.set_ylabel(units[0][1])
+                            axx.plot(xvalues, yvalues, label=self._experimentList[experimentIndex])
+                            axx.set_title(self._experimentList[experimentIndex])
+                            canPlotAll = True
+                    else:
+                       self.__EISAnalysis(measurement, experimentIndex)
+                       canPlotAll = True
+                experimentIndex = experimentIndex + 1
                     
         if canPlotAll:
             plt.grid(True)
-            if self.legend_on:
+            if self.legend_on and not self.splitGraphs:
                 plt.legend(bbox_to_anchor=(1.05,1.05))
-            if self.units_on and len(units) > 0:
-                plt.xlabel(units[0][0])
-                plt.ylabel(units[0][1])
             if self.title is not '':
                 plt.title(self.title)
             plt.show()
@@ -330,11 +357,24 @@ class jparse:
                     v.append(val)
                 eisdata[value.unit.q] = v                                    
         
-        fig, ax1 = plt.subplots()
-        plt.grid(True)
-        ax2 = ax1.twinx()
-        ax1.loglog(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.Z], 'gs-', label = self.eisTypes.Z)
-        ax2.plot(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.phase], 'b*-', label = self.eisTypes.phase)
+        if self.splitGraphs:
+            fig, ax1 = plt.subplots()
+            ax2 = ax1.twinx()
+        else:
+            if not 'bode' in self.__plots:
+                fig, ax1 = plt.subplots()
+                ax2 = ax1.twinx()
+                self.__plots['bode'] = [fig, ax1, ax2]
+            else:
+                plotdata = self.__plots['bode']        
+                fig = plotdata[0]
+                ax1 = plotdata[1]
+                ax2 = plotdata[2]
+
+        ax1.loglog(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.Z], 's-')
+        ax1.grid(True)
+        ax2.plot(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.phase], '*-')
+        ax2.grid(True)
         b, t = ax1.get_ylim()
         b2, t2 = ax2.get_ylim()
         ax1.set_ylim([b/10, t*3])
@@ -343,12 +383,22 @@ class jparse:
         ax1.set_ylabel(self.eisTypes.Z + "/$\Omega$")
         ax2.set_ylabel(self.eisTypes.phase + "/$^\circ$")
         
-        fig2, ax3 = plt.subplots()
-        ax3.plot(eisdata[self.eisTypes.zdash], eisdata[self.eisTypes.zdashneg], 'bo-')
+        if self.splitGraphs:
+            fig2, ax3 = plt.subplots()
+        else:
+            if not 'Nyq' in self.__plots:
+                fig2, ax3 = plt.subplots()
+                self.__plots['Nyq'] = [fig2, ax3]
+            else:
+                plotdata = self.__plots['Nyq']        
+                fig2 = plotdata[0]
+                ax3 = plotdata[1]
+        
+        ax3.grid(True)
+        ax3.plot(eisdata[self.eisTypes.zdash], eisdata[self.eisTypes.zdashneg], 'o-')
         ax3.set_xlabel(self.eisTypes.zdashneg + "/" + self.__getScale() + "$\Omega$")
         ax3.set_ylabel(self.eisTypes.zdash + "/" + self.__getScale() + "$\Omega$")
         self.datapoints[self.experimentList[experimentIndex]] = eisdata
-        self.legend_on = False
         
     def __getScale(self):
         if self.eisTypes.scale == pow(10,3):
