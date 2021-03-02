@@ -61,15 +61,16 @@ and that is about all you need to get started!
 
 Here is a raw SWV experiment plot:
 
-![SWV Raw](https://drive.google.com/uc?export=view&id=1cSfbIJnPDbMwvZKf04IyDE6yvJHXTZba)
+![SWV Raw](https://user-images.githubusercontent.com/45431675/109668244-a7b75000-7b79-11eb-8dc4-b5c7c48f60fa.png)
 
 and then I did a baseline subtraction on starting position 7:
 
-![SWV Baseline](https://drive.google.com/uc?export=view&id=1bp-EswtDpwZAEcG7yr4WBwHFOkk-176E)
+![SWV Baseline](https://user-images.githubusercontent.com/45431675/109668187-95d5ad00-7b79-11eb-8362-1b34b6ae43ad.png)
 
 Here is an example of an EIS measurement plot:
 
-![EIS Raw](https://drive.google.com/uc?export=view&id=1-HvuJfHDtJeVflLOh3hmkf1RPH5pqiqc)
+![EIS_Raw](https://user-images.githubusercontent.com/45431675/109668120-80f91980-7b79-11eb-85cc-f993582a594d.png)
+
 
 Let me know if you have ideas for additional basic functionality.
 
