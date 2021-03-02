@@ -56,6 +56,7 @@ and that is about all you need to get started!
   - The results will be grouped by their units and plotted together, but you can disable this by setting ```data.splitGraphs = False```
   - The data is parsed seperately into different objects, so a dictionary of these objects are created based on the file names: ```data.data['A']``` will give you access to the PSData object of file A.pssession. The ```data.datapoints[]``` is still accessible without having to reference the filenames.
   - The tags of the experiments continue between files. So if A contains 3xSWV and B contains 2xSWV and 2XCV, the tag list will be: ```[SWV 1, SWV 2, SWV 3, SWV 4, SWV 5, CV 1, CV 2]```
+- Graph titles: ```.titles = ['All unfiltered SWV data', 'CV unfiltered', 'Nyq', 'ZvsZdash']``` is an example of setting the graph titles. The order is important, so run it once to check in which order the graphs are shown. The amount of required titles are calculated when you set the ```.titles``` array, and it will print out the required title count if you have insufficient/too many titles.
 
 **Example plots:**
 
@@ -67,10 +68,9 @@ and then I did a baseline subtraction on starting position 7:
 
 ![SWV Baseline](https://user-images.githubusercontent.com/45431675/109668187-95d5ad00-7b79-11eb-8362-1b34b6ae43ad.png)
 
-Here is an example of an EIS measurement plot:
+Here is an example of two EIS measurements plotted together:
 
-![EIS_Raw](https://user-images.githubusercontent.com/45431675/109668120-80f91980-7b79-11eb-85cc-f993582a594d.png)
-
+![EIS_Comp](https://user-images.githubusercontent.com/45431675/109689101-a3952d80-7b8d-11eb-9017-28dbb52d56c2.png)
 
 Let me know if you have ideas for additional basic functionality.
 
