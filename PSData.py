@@ -132,16 +132,15 @@ class MethodType:
         self.CV = 'CV'
         self.SWV = 'SWV'
         self.EIS = 'EIS'
-        self.All = ''
     
 class Baseline:
     def __init__(self):
         self._startPosition = -1
         self._endPosition = -1
-        self.__subtractBaseline = False
-        self.__generatedBaseline = False
-        self.__gradient = 0
-        self.__constant = 0
+        self._subtractBaseline = False
+        self._generatedBaseline = False
+        self._gradient = 0
+        self._constant = 0
         
     @property
     def startPosition(self):
@@ -149,7 +148,7 @@ class Baseline:
     
     @startPosition.setter
     def startPosition(self, val):
-        self.__subtractBaseline = True
+        self._subtractBaseline = True
         self._startPosition = val
 
     @property
@@ -161,19 +160,19 @@ class Baseline:
         self._endPosition = val
     
     def generateBaseline(self, x, y):
-        if self.__subtractBaseline:
+        if self._subtractBaseline:
             try:
                 if self.endPosition == -1:
                     self.endPosition = len(y) - self.startPosition
-                self.__gradient = (y[self.startPosition].v - y[self.endPosition].v)/(x[self.startPosition].v - x[self.endPosition].v)
-                self.__constant = y[self.startPosition].v - (x[self.startPosition].v*self.__gradient)
-                self.__generatedBaseline = True
+                self._gradient = (y[self.startPosition].v - y[self.endPosition].v)/(x[self.startPosition].v - x[self.endPosition].v)
+                self._constant = y[self.startPosition].v - (x[self.startPosition].v*self._gradient)
+                self._generatedBaseline = True
             except:
                 print('Exception: Could not generate baseline. Check validity of startPosition and endPosition.')
             
     def subtract(self, x, y):
-        if self.__subtractBaseline and self.__generatedBaseline:
-            return (y - (self.__gradient*x + self.__constant))
+        if self._subtractBaseline and self._generatedBaseline:
+            return (y - (self._gradient*x + self._constant))
         return y
 
 class EISMeasurement:
@@ -201,12 +200,21 @@ class axis:
 
 class jparse:    
     @property
+    def titles(self):
+        return self._titles
+    
+    @titles.setter
+    def titles(self, val):
+        self._titlesOn = True
+        self._titles = val
+    
+    @property
     def methodFilter(self):
         return self._methodFilter
     
     @methodFilter.setter
     def methodFilter(self, val):
-        self.__filterOnMethod = True
+        self._filterOnMethod = True
         self._methodFilter = val
     
     @property
@@ -214,25 +222,26 @@ class jparse:
         return self._experimentList
     
     def __init__(self, filename):
-        self.__filterOnMethod = False
+        self._filterOnMethod = False
         self._methodFilter = ''  
         self.methodType = MethodType()
         self.baseline = Baseline()
         self.legend_on = True
         self.units_on = True
-        self.title = ''
-        self.__jsonParsed = False
+        self._jsonParsed = False
         self._experimentList = []
         self.eisTypes = EISMeasurement()
         self.datapoints = {}
         self.files = []
-        self.data = self.__parse(filename)
-        self.__plots = {}
+        self.data = self._parse(filename)
+        self._plots = {}
+        self._titles = []
+        self._titlesOn = False
+        self._titleIndex = 0
         self.splitGraphs = False
-       
         
-    def __parse(self, filenames):
-        self.__getFilenames(filenames)
+    def _parse(self, filenames):
+        self._getFilenames(filenames)
         
         try:
             index = 0
@@ -251,7 +260,7 @@ class jparse:
             for file in self.files:
                 data2 = readData[file][0:(len(readData[file]) - 1)] # has a weird character at the end
                 parsedData[file] = json.loads(data2, object_hook=lambda d: SimpleNamespace(**d))
-            self.__jsonParsed = True
+            self._jsonParsed = True
         except:
             print('Failed to parse string to JSON')
             return
@@ -259,7 +268,7 @@ class jparse:
         try:
             for file in self.files:
                 for measurement in parsedData[file].measurements:
-                    currentMethod = self.__getMethodType(measurement.method).upper()
+                    currentMethod = self._getMethodType(measurement.method).upper()
                     index = len([i for i, s in enumerate(self._experimentList) if currentMethod in s])
                     self._experimentList.append(currentMethod + ' ' + str(index + 1))
         except:
@@ -267,7 +276,7 @@ class jparse:
             return
         return parsedData
     
-    def __getFilenames(self, files):
+    def _getFilenames(self, files):
         for f in files:
             file = f.split('\\')
             name = file[len(file) - 1].replace('.pssession','')
@@ -275,69 +284,40 @@ class jparse:
                 
     def plot(self, experimentLabels = ''):
         # Experimental, use at own risk
-        if not self.__jsonParsed:
+        if not self._jsonParsed:
             return
+
+        if self._titlesOn:        
+            graphCount = self._getGraphCount()
+            if len(self._titles) != graphCount:
+                print('Title count incorrect. Set ' + str(len(self._titles)) + '/' + str(graphCount))
+                return
         
         experimentIndex = 0
         for file in self.files:
             data = self.data[file]
-            units = []
             canPlotAll = False
-            
-            
             for measurement in data.measurements:
                 canplot = True
-                currentMethod = self.__getMethodType(measurement.method).upper()
+                currentMethod = self._getMethodType(measurement.method).upper()
                 
-                if self.__filterOnMethod and not currentMethod in self._methodFilter:
+                if self._filterOnMethod and not currentMethod in self._methodFilter:
                     canplot = False
                     
                 if not experimentLabels == '' and canplot:
                     canplot =  self._experimentList[experimentIndex] in experimentLabels
                     
                 if canplot:
-                    xvalues = []
-                    yvalues = []
-                    if not currentMethod in self.methodType.EIS:
-                        if self.splitGraphs:
-                            figx, axx = plt.subplots()
-                            axx.grid(True)
-                        ax = axis()
-                        for curve in measurement.curves:
-                            if currentMethod in self.methodType.SWV:
-                                self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
-                            if self.units_on and len(units) <= 0:
-                                units.append(self.__getUnits(curve.title))
-                                if not self.splitGraphs:
-                                    figx, axx = plt.subplots()
-                            pos = 0
-                            for y in curve.yaxisdataarray.datavalues:
-                                xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
-                                if currentMethod in self.methodType.SWV:
-                                    yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
-                                else:
-                                    yvalues.append(y.v)
-                                pos = pos + 1
-                            ax.xvalues = xvalues
-                            ax.yvalues = yvalues
-                            self.datapoints[self._experimentList[experimentIndex]] = ax
-                            if self.units_on:
-                                axx.set_xlabel(units[0][0])
-                                axx.set_ylabel(units[0][1])
-                            axx.plot(xvalues, yvalues, label=self._experimentList[experimentIndex])
-                            axx.set_title(self._experimentList[experimentIndex])
-                            canPlotAll = True
+                    if currentMethod in self.methodType.SWV:
+                        self._SWVAnalysis(measurement,experimentIndex)
+                    elif currentMethod in self.methodType.EIS:
+                        self._EISAnalysis(measurement, experimentIndex)
                     else:
-                       self.__EISAnalysis(measurement, experimentIndex)
-                       canPlotAll = True
+                        self._CVAnalysis(measurement, experimentIndex)
+                    canPlotAll = True
                 experimentIndex = experimentIndex + 1
                     
         if canPlotAll:
-            plt.grid(True)
-            if self.legend_on and not self.splitGraphs:
-                plt.legend(bbox_to_anchor=(1.05,1.05))
-            if self.title is not '':
-                plt.title(self.title)
             plt.show()
         else:
             if not self._methodFilter in experimentLabels:
@@ -345,7 +325,125 @@ class jparse:
             else:
                 print('No data found for: ' + self.methodFilter)
                 
-    def __EISAnalysis(self, measurement, experimentIndex):
+    def _getGraphCount(self):
+        eisCount =  len([i for i, s in enumerate(self._experimentList) if self.methodType.EIS in s])*2
+        swvCount = len([ i for i, s in enumerate(self._experimentList) if self.methodType.SWV in s])
+        cvCount = len([i for i, s in enumerate(self._experimentList) if self.methodType.CV in s])
+        overallCount = 0
+
+        if not self.methodFilter in self.methodType.EIS:
+            eisCount = 0
+            overallCount += 2
+        if not self.methodFilter in self.methodType.SWV:
+            swvCount = 0
+            overallCount += 1
+        if not self.methodFilter in self.methodType.CV:
+            cvCount = 0
+            overallCount += 1
+        
+        graphCount = 0
+        if self.splitGraphs:
+            graphCount = eisCount + swvCount + cvCount
+        else:
+            if eisCount > 0:
+                graphCount += 2
+            if swvCount > 0:
+                graphCount += 1
+            if cvCount > 0:
+                graphCount += 1
+        
+        return graphCount
+                
+    def _SWVAnalysis(self, measurement, experimentIndex):
+        units = []
+        titleIndex = 0
+        if self.splitGraphs:
+            figx, axx = plt.subplots()
+            axx.grid(True)
+            titleIndex = self._titleIndex
+        else:
+            if not 'swv' in self._plots:
+                figx, axx = plt.subplots()
+                axx.grid(True)
+                titleIndex = self._titleIndex
+                self._titleIndex += 1
+                self._plots['swv'] = [figx, axx, titleIndex]
+            else:
+                plotdata = self._plots['swv']        
+                figx = plotdata[0]
+                axx = plotdata[1]
+                titleIndex = plotdata[2]
+        ax = axis()
+        for curve in measurement.curves:
+            self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
+            if self.units_on and len(units) <= 0:
+                units.append(self._getUnits(curve.title))
+            pos = 0
+            for y in curve.yaxisdataarray.datavalues:
+                ax.xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
+                ax.yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
+                pos = pos + 1
+            self.datapoints[self._experimentList[experimentIndex]] = ax
+            if self.units_on:
+                axx.set_xlabel(units[0][0])
+                axx.set_ylabel(units[0][1])
+            axx.plot(ax.xvalues, ax.yvalues, label=self._experimentList[experimentIndex])
+            if self.splitGraphs:
+                if self._titlesOn:
+                    axx.set_title(self.titles[titleIndex])
+                else:
+                    axx.set_title(self._experimentList[experimentIndex])
+            else:
+                axx.legend(bbox_to_anchor=(1.05,1.05))
+                if self._titlesOn:
+                   axx.set_title(self.titles[titleIndex])
+                   
+                            
+    def _CVAnalysis(self, measurement, experimentIndex):
+        units = []
+        if self.splitGraphs:
+            figx, axx = plt.subplots()
+            titleIndex = self._titleIndex
+            self._titleIndex += 1
+            axx.grid(True)
+        else:
+            if not 'cv' in self._plots:
+                figx, axx = plt.subplots()
+                axx.grid(True)
+                titleIndex = self._titleIndex
+                self._titleIndex += 1
+                self._plots['cv'] = [figx, axx, titleIndex]
+            else:
+                plotdata = self._plots['cv']        
+                figx = plotdata[0]
+                axx = plotdata[1]
+                titleIndex = plotdata[2]
+        ax = axis()
+        for curve in measurement.curves:
+            if self.units_on and len(units) <= 0:
+                units.append(self._getUnits(curve.title))
+            pos = 0
+            for y in curve.yaxisdataarray.datavalues:
+                ax.xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
+                ax.yvalues.append(y.v)
+                pos = pos + 1
+            self.datapoints[self._experimentList[experimentIndex]] = ax
+        axx.plot(ax.xvalues, ax.yvalues, label=self._experimentList[experimentIndex])
+        if self.units_on:
+            axx.set_xlabel(units[0][0])
+            axx.set_ylabel(units[0][1])
+        if self.splitGraphs:
+            if self._titlesOn:
+               axx.set_title(self.titles[titleIndex])
+               self._titleIndex += 1
+            else:
+                axx.set_title(self._experimentList[experimentIndex])
+        else:
+            axx.legend(bbox_to_anchor=(1.05,1.05))
+            if self._titlesOn:
+                   axx.set_title(self.titles[titleIndex])
+
+    def _EISAnalysis(self, measurement, experimentIndex):
         eisdata = {}                    
         for eis in measurement.eisdatalist:
             for value in eis.dataset.values:
@@ -360,20 +458,25 @@ class jparse:
         if self.splitGraphs:
             fig, ax1 = plt.subplots()
             ax2 = ax1.twinx()
+            titleIndex = self._titleIndex
+            self._titleIndex += 1
         else:
-            if not 'bode' in self.__plots:
+            if not 'bode' in self._plots:
                 fig, ax1 = plt.subplots()
                 ax2 = ax1.twinx()
-                self.__plots['bode'] = [fig, ax1, ax2]
+                titleIndex = self._titleIndex
+                self._titleIndex += 1
+                self._plots['bode'] = [fig, ax1, ax2, titleIndex]
             else:
-                plotdata = self.__plots['bode']        
+                plotdata = self._plots['bode']        
                 fig = plotdata[0]
                 ax1 = plotdata[1]
                 ax2 = plotdata[2]
+                titleIndex = plotdata[3]
 
-        ax1.loglog(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.Z], 's-')
+        ax1.loglog(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.Z], 's-', label=self._experimentList[experimentIndex])
         ax1.grid(True)
-        ax2.plot(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.phase], '*-')
+        ax2.plot(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.phase], '*-', label=self._experimentList[experimentIndex])
         ax2.grid(True)
         b, t = ax1.get_ylim()
         b2, t2 = ax2.get_ylim()
@@ -382,25 +485,48 @@ class jparse:
         ax1.set_xlabel(self.eisTypes.freq)
         ax1.set_ylabel(self.eisTypes.Z + "/$\Omega$")
         ax2.set_ylabel(self.eisTypes.phase + "/$^\circ$")
+        if self._titlesOn:
+           ax1.set_title(self.titles[titleIndex])
+
+        if self.splitGraphs:
+            ax2.set_title(self._experimentList[experimentIndex])
+        else:
+            ax2.legend(bbox_to_anchor=(1.3,1.05))
         
         if self.splitGraphs:
             fig2, ax3 = plt.subplots()
+            titleIndex = self._titleIndex
+            self._titleIndex += 1
         else:
-            if not 'Nyq' in self.__plots:
+            if not 'Nyq' in self._plots:
                 fig2, ax3 = plt.subplots()
-                self.__plots['Nyq'] = [fig2, ax3]
+                titleIndex = self._titleIndex
+                self._titleIndex += 1
+                self._plots['Nyq'] = [fig2, ax3, titleIndex]
             else:
-                plotdata = self.__plots['Nyq']        
+                plotdata = self._plots['Nyq']        
                 fig2 = plotdata[0]
                 ax3 = plotdata[1]
+                titleIndex = plotdata[2]
         
         ax3.grid(True)
-        ax3.plot(eisdata[self.eisTypes.zdash], eisdata[self.eisTypes.zdashneg], 'o-')
-        ax3.set_xlabel(self.eisTypes.zdashneg + "/" + self.__getScale() + "$\Omega$")
-        ax3.set_ylabel(self.eisTypes.zdash + "/" + self.__getScale() + "$\Omega$")
+        ax3.plot(eisdata[self.eisTypes.zdash], eisdata[self.eisTypes.zdashneg], 'o-', label=self._experimentList[experimentIndex])
+        ax3.set_xlabel(self.eisTypes.zdashneg + "/" + self._getScale() + "$\Omega$")
+        ax3.set_ylabel(self.eisTypes.zdash + "/" + self._getScale() + "$\Omega$")
         self.datapoints[self.experimentList[experimentIndex]] = eisdata
+        if self.splitGraphs:
+            if self._titlesOn:
+               ax3.set_title(self.titles[titleIndex])
+               self._titleIndex += 1
+            else:
+                ax3.set_title(self._experimentList[experimentIndex])
+        else:
+            ax3.legend(bbox_to_anchor=(1.05,1.05))
+            if self._titlesOn:
+               ax3.set_title(self.titles[titleIndex])
+            
         
-    def __getScale(self):
+    def _getScale(self):
         if self.eisTypes.scale == pow(10,3):
             return 'k'
         if self.eisTypes.scale == pow(10,6):
@@ -411,11 +537,11 @@ class jparse:
             return 'T'
         return ''
 
-    def __getUnits(self, curveTitle):
+    def _getUnits(self, curveTitle):
         details = curveTitle.split(" ")
         return [details[3], details[1]]
         
-    def __getMethodType(self, method):
+    def _getMethodType(self, method):
         methodName = ''
         splitted = method.split("\r\n")
         for line in splitted:

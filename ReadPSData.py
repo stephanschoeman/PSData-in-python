@@ -9,9 +9,11 @@ This is an example on how to use the PSData.py file
 import PSData as PS
 
 # just paste the file source here:
-data = PS.jparse([r'filelocation\A.pssession', r'filelocation\B.pssession', r'filelocation\C.pssession'])
+data = PS.jparse([r'floc\A.pssession', r'floc\B.pssession',  r'floc\C.pssession'])
 #data.methodFilter = data.methodType.SWV
-#data.baseline.startPosition = 5
+#data.baseline.startPosition = 10
+#data.titles = ['All unfiltered SWV data', 'CV unfiltered', 'Nyq', 'ZvsZdash']
+#data.splitGraphs = True
 data.plot()
 
 """
