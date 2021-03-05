@@ -9,6 +9,8 @@ import simplejson as json
 import matplotlib.pyplot as plt
 
 class Description:
+    __slots__ = ['SWVParameters', 'CVParameters', 'Pretreatment', 'Technique']
+    
     def __init__(self):
         self.SWVParameters = ''
         self.CVParameters = ''
@@ -16,6 +18,8 @@ class Description:
         self.Technique = ''
 
 class Unit:
+    __slots__ = ['type', 's', 'c', 't']
+    
     def __init__(self):
         self.type = ''
         self.s = ''
@@ -23,6 +27,8 @@ class Unit:
         self.a = ''
 
 class Datavalue:
+    __slots__ = ['v', 's', 'c', 't']
+    
     def __init__(self):
         self.v = 0.0
         self.s = 0
@@ -30,6 +36,8 @@ class Datavalue:
         self.t = ''
         
 class Eisdatalist:
+    __slots__ = ['appearance', 'title', 'hash', 'scantype', 'freqtype', 'cdc', 'fitvalues', 'dataset']
+    
     def __init__(self):
         self.appearance = Appearance()
         self.title = ''
@@ -41,6 +49,7 @@ class Eisdatalist:
         self.dataset = Dataset()
     
 class Value:
+    __slots__ = ['type', 'arraytype', 'description', 'unit', 'datavalues', 'datavaluetype']
     def __init__(self):
         self.type = ''
         self.arraytype = 0
@@ -50,11 +59,13 @@ class Value:
         self.datavaluetype = ''
     
 class Dataset:
+    __slots__ = ['type', 'values']
     def __init__(self):
         self.type = ''
         self.values = []
     
 class Appearance:
+    __slots__ = ['type', 'autoassigncolor', 'color', 'linewidth', 'symbolsize', 'symboltype', 'noline']
     def __init__(self):
         self.type = ''
         self.autoassigncolor = False
@@ -66,6 +77,7 @@ class Appearance:
         self.noline = False
     
 class Xaxisdataarray:
+    __slots__ = ['type', 'arraytype', 'description', 'unit', 'datavalues', 'datavaluetype']
     def __init__(self):
         self.type = ''
         self.arraytype = 0
@@ -75,6 +87,7 @@ class Xaxisdataarray:
         self.datavaluetype = ''
      
 class Yaxisdataarray:
+    __slots__ = ['type', 'arraytype', 'description', 'unit', 'datavalues', 'datavaluetype']
     def __init__(self):
         self.type = ''
         self.arraytype = 0
@@ -84,14 +97,16 @@ class Yaxisdataarray:
         self.datavaluetype = ''
 
 class Peaklist:
+    __slots__ = ['peaktype', 'left', 'right', 'peak', 'isign']
     def __init__(self):
-        self.peaktpe = 0
+        self.peaktype = 0
         self.left = 0
         self.right = 0
         self.peak = 0
         self.isign = 0
 
 class Curve:
+    __slots__ = ['appearance', 'title', 'hash', 'type', 'xaxis', 'xaxisdataarray', 'yaxisdataarray', 'meastype', 'peaklist', 'corrosionbutlervolmer', 'corrosiontafel']
     def __init__(self):
         self.appearance = Appearance()
         self.title = ''
@@ -107,6 +122,7 @@ class Curve:
         self.corrosiontafel = []
     
 class Measurement:
+    __slots__ = ['title','timestamp','utctimestamp','deviceused','deviceserial','devicefw','type','dataset','method','curves','eisdatalist']
     def __init__(self):
         self.title = ''
         self.timestamp = object()
@@ -121,6 +137,7 @@ class Measurement:
         self.eisdatalist = []
         
 class Data:
+    __slots__ = ['type','coreversion','methodformeasurement','measurements']
     def __init__(self):
         self.type = ''
         self.coreversion = ''
@@ -128,6 +145,7 @@ class Data:
         self.measurements = []
     
 class MethodType:
+    __slots__ = ['CV','SWV','EIS']
     def __init__(self):    
         self.CV = 'CV'
         self.SWV = 'SWV'
@@ -176,6 +194,7 @@ class Baseline:
         return y
 
 class EISMeasurement:
+    __slots__ = ['freq','zdash','potential','zdashneg','Z','phase','current','npoints','tint','ymean','debugtext','Y','YRe','YIm','scale']
     def __init__(self):
         self.freq = "Frequency"
         self.zdash = "Z'"
@@ -194,6 +213,7 @@ class EISMeasurement:
         self.scale = 100000 # standard set to mega ohms
 
 class axis:
+    __slots__ = ['xvalues','yvalues']
     def __init__(self):
         self.xvalues = []
         self.yvalues = []
@@ -473,10 +493,10 @@ class jparse:
                 ax1 = plotdata[1]
                 ax2 = plotdata[2]
                 titleIndex = plotdata[3]
-
-        ax1.loglog(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.Z], 's-', label=self._experimentList[experimentIndex])
+        s = 4
+        ax1.loglog(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.Z],'s-', label=self._experimentList[experimentIndex], markersize=s)
         ax1.grid(True)
-        ax2.plot(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.phase], '*-', label=self._experimentList[experimentIndex])
+        ax2.plot(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.phase],'*-', label=self._experimentList[experimentIndex], markersize=s)
         ax2.grid(True)
         b, t = ax1.get_ylim()
         b2, t2 = ax2.get_ylim()
@@ -510,7 +530,7 @@ class jparse:
                 titleIndex = plotdata[2]
         
         ax3.grid(True)
-        ax3.plot(eisdata[self.eisTypes.zdash], eisdata[self.eisTypes.zdashneg], 'o-', label=self._experimentList[experimentIndex])
+        ax3.plot(eisdata[self.eisTypes.zdash], eisdata[self.eisTypes.zdashneg],'o-', label=self._experimentList[experimentIndex], markersize=s)
         ax3.set_xlabel(self.eisTypes.zdashneg + "/" + self._getScale() + "$\Omega$")
         ax3.set_ylabel(self.eisTypes.zdash + "/" + self._getScale() + "$\Omega$")
         self.datapoints[self.experimentList[experimentIndex]] = eisdata
