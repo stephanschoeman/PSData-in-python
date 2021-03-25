@@ -9,7 +9,7 @@ This is an example on how to use the PSData.py file
 import PSData as PS
 
 # just paste the file source here:
-data = PS.jparse([r'C:\Users\Stephan\Desktop\bik\F1_AB.pssession', r'C:\Users\Stephan\Desktop\bik\F2_AB.pssession'])
+data = PS.jparse([r'C:\Users\Stephan\Desktop\bik\hah\A.pssession', r'C:\Users\Stephan\Desktop\bik\sasa\E.pssession'])
 #data.methodFilter = data.methodType.SWV
 #data.baseline.startPosition = 10
 #data.titles = ['All unfiltered SWV data', 'CV unfiltered', 'Nyq', 'ZvsZdash']

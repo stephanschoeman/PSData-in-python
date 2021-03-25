@@ -151,7 +151,7 @@ class Data:
         self.coreversion = ''
         self.methodformeasurement = ''
         self.measurements = []
-    
+
 class MethodType:
     __slots__ = ['CV','SWV','EIS']
     
@@ -159,110 +159,36 @@ class MethodType:
         self.CV = 'CV'
         self.SWV = 'SWV'
         self.EIS = 'EIS'
-    
-class Baseline:
-    def __init__(self):
-        self._startPosition = -1
-        self._endPosition = -1
-        self._subtractBaseline = False
-        self._generatedBaseline = False
-        self._gradient = 0
-        self._constant = 0
-        
-    @property
-    def startPosition(self):
-        return self._startPosition
-    
-    @startPosition.setter
-    def startPosition(self, val):
-        self._subtractBaseline = True
-        self._startPosition = val
 
-    @property
-    def endPosition(self):
-        return self._endPosition
-    
-    @endPosition.setter
-    def endPosition(self, val):
-        self._endPosition = val
-    
-    def generateBaseline(self, x, y):
-        if self._subtractBaseline:
-            try:
-                if self.endPosition == -1:
-                    self.endPosition = len(y) - self.startPosition
-                self._gradient = (y[self.startPosition].v - y[self.endPosition].v)/(x[self.startPosition].v - x[self.endPosition].v)
-                self._constant = y[self.startPosition].v - (x[self.startPosition].v*self._gradient)
-                self._generatedBaseline = True
-            except:
-                print('Exception: Could not generate baseline. Check validity of startPosition and endPosition.')
-            
-    def subtract(self, x, y):
-        if self._subtractBaseline and self._generatedBaseline:
-            return (y - (self._gradient*x + self._constant))
-        return y
-
-class EISMeasurement:
-    __slots__ = ['freq','zdash','potential','zdashneg','Z','phase','current','npoints','tint','ymean','debugtext','Y','YRe','YIm','scale']
+class axis:
+    __slots__ = ['xvalues','yvalues']
     
     def __init__(self):
-        self.freq = "Frequency"
-        self.zdash = "Z'"
-        self.potential = "Potential"
-        self.zdashneg = "-Z''"
-        self.Z = "Z"
-        self.phase = "-Phase"
-        self.current = "Current"
-        self.npoints = "npoints"
-        self.tint = "tint"
-        self.ymean = "ymean"
-        self.debugtext = "debugtext"
-        self.Y = "Y"
-        self.YRe = "Y'"
-        self.YIm = "Y''"
-        self.scale = 100000 # standard set to mega ohms
+        self.xvalues = []
+        self.yvalues = []
+
 
 class jparse:    
-    @property
-    def titles(self):
-        return self._titles
-    
-    @titles.setter
-    def titles(self, val):
-        self._titlesOn = True
-        self._titles = val
-    
-    @property
-    def methodFilter(self):
-        return self._methodFilter
-    
-    @methodFilter.setter
-    def methodFilter(self, val):
-        self._filterOnMethod = True
-        self._methodFilter = val
-    
     @property
     def experimentList(self):
         return self._experimentList
     
+    @property
+    def parsedData(self):
+        return self._parsedData
+    
+    @property
+    def data(self):
+        return self._data
+    
     def __init__(self, filename):
-        self._filterOnMethod = False
-        self._methodFilter = ''  
-        self.methodType = MethodType()
-        self.baseline = Baseline()
-        self.legend_on = True
-        self.units_on = True
-        self._jsonParsed = False
+        self._methodType = MethodType()
         self._experimentList = []
-        self.eisTypes = EISMeasurement()
-        self.datapoints = {}
         self.files = []
-        self.data = self._parse(filename)
-        self._plots = {}
-        self._titles = []
-        self._titlesOn = False
-        self._titleIndex = 0
-        self.splitGraphs = False
+        self._parsedData = self._parse(filename)
+        self.experimentIndex = 0
+        self._data = self._simplify()
+       
         
     def _parse(self, filenames):
         self._getFilenames(filenames)
@@ -274,7 +200,7 @@ class jparse:
                 f = open(filename, "rb")
                 readData[self.files[index]] = f.read().decode('utf-16').replace('\r\n',' ').replace(':true',r':"True"').replace(':false',r':"False"')
                 index = index + 1
-                f.close
+                f.close()
         except:
             print('Could not find or open file: ' + filename)
             return
@@ -284,7 +210,6 @@ class jparse:
             for file in self.files:
                 data2 = readData[file][0:(len(readData[file]) - 1)] # has a weird character at the end
                 parsedData[file] = json.loads(data2, object_hook=lambda d: SimpleNamespace(**d))
-            self._jsonParsed = True
         except:
             print('Failed to parse string to JSON')
             return
@@ -300,9 +225,40 @@ class jparse:
             return
         return parsedData
     
+    def _simplify(self):
+        simplifiedData = {}
+        experimentIndex = 0
+        for file in self.files:
+            rawData = self._parsedData[file]
+            for measurement in rawData.measurements:
+                currentMethod = self._getMethodType(measurement.method).upper()
+                print(currentMethod)
+                if currentMethod in self._methodType.SWV or currentMethod in self._methodType.CV:
+                    simplifiedData[self._experimentList[experimentIndex]] = self._getXYDataPoints(measurement)
+                experimentIndex = experimentIndex + 1
+        
+        return simplifiedData
+        
+    def _getXYDataPoints(self, measurement):
+        ax = axis()
+        for curve in measurement.curves:
+            pos = 0
+            for y in curve.yaxisdataarray.datavalues:
+                ax.xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
+                ax.yvalues.append(y.v)
+                pos = pos + 1
+        return ax
+            
     def _getFilenames(self, files):
         for f in files:
             file = f.split('\\')
             name = file[len(file) - 1].replace('.pssession','')
             self.files.append(name)
                 
+    def _getMethodType(self, method):
+        methodName = ''
+        splitted = method.split("\r\n")
+        for line in splitted:
+            if "METHOD_ID" in line:
+                methodName = line.split("=")[1]
+        return methodName

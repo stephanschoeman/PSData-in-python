@@ -15,6 +15,41 @@ class axis:
         self.yvalues = []
 
 class PSDataPlot:
+    @property
+    def titles(self):
+        return self._titles
+    
+    @titles.setter
+    def titles(self, val):
+        self._titlesOn = True
+        self._titles = val
+    
+    @property
+    def methodFilter(self):
+        return self._methodFilter
+    
+    @methodFilter.setter
+    def methodFilter(self, val):
+        self._filterOnMethod = True
+        self._methodFilter = val
+    
+    def __init__(self, filename):
+        self._filterOnMethod = False
+        self._methodFilter = ''  
+        self.methodType = MethodType()
+        self.baseline = Baseline()
+        self.legend_on = True
+        self.units_on = True
+        self._experimentList = []
+        self.eisTypes = EISMeasurement()
+        self.datapoints = {}
+        self.files = []
+        self.data = self._parse(filename)
+        self._plots = {}
+        self._titles = []
+        self._titlesOn = False
+        self._titleIndex = 0
+        self.splitGraphs = False
     
     def plot(self, PSObject, experimentLabels = ''):
         # Experimental, use at own risk
@@ -314,10 +349,73 @@ class PSDataPlot:
         details = curveTitle.split(" ")
         return [details[3], details[1]]
         
-    def _getMethodType(self, method):
-        methodName = ''
-        splitted = method.split("\r\n")
-        for line in splitted:
-            if "METHOD_ID" in line:
-                methodName = line.split("=")[1]
-        return methodName
+    
+class MethodType:
+    __slots__ = ['CV','SWV','EIS']
+    
+    def __init__(self):    
+        self.CV = 'CV'
+        self.SWV = 'SWV'
+        self.EIS = 'EIS'
+    
+class Baseline:
+    def __init__(self):
+        self._startPosition = -1
+        self._endPosition = -1
+        self._subtractBaseline = False
+        self._generatedBaseline = False
+        self._gradient = 0
+        self._constant = 0
+        
+    @property
+    def startPosition(self):
+        return self._startPosition
+    
+    @startPosition.setter
+    def startPosition(self, val):
+        self._subtractBaseline = True
+        self._startPosition = val
+
+    @property
+    def endPosition(self):
+        return self._endPosition
+    
+    @endPosition.setter
+    def endPosition(self, val):
+        self._endPosition = val
+    
+    def generateBaseline(self, x, y):
+        if self._subtractBaseline:
+            try:
+                if self.endPosition == -1:
+                    self.endPosition = len(y) - self.startPosition
+                self._gradient = (y[self.startPosition].v - y[self.endPosition].v)/(x[self.startPosition].v - x[self.endPosition].v)
+                self._constant = y[self.startPosition].v - (x[self.startPosition].v*self._gradient)
+                self._generatedBaseline = True
+            except:
+                print('Exception: Could not generate baseline. Check validity of startPosition and endPosition.')
+            
+    def subtract(self, x, y):
+        if self._subtractBaseline and self._generatedBaseline:
+            return (y - (self._gradient*x + self._constant))
+        return y
+
+class EISMeasurement:
+    __slots__ = ['freq','zdash','potential','zdashneg','Z','phase','current','npoints','tint','ymean','debugtext','Y','YRe','YIm','scale']
+    
+    def __init__(self):
+        self.freq = "Frequency"
+        self.zdash = "Z'"
+        self.potential = "Potential"
+        self.zdashneg = "-Z''"
+        self.Z = "Z"
+        self.phase = "-Phase"
+        self.current = "Current"
+        self.npoints = "npoints"
+        self.tint = "tint"
+        self.ymean = "ymean"
+        self.debugtext = "debugtext"
+        self.Y = "Y"
+        self.YRe = "Y'"
+        self.YIm = "Y''"
+        self.scale = 100000 # standard set to mega ohms
