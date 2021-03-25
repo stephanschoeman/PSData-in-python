@@ -167,6 +167,25 @@ class axis:
         self.xvalues = []
         self.yvalues = []
 
+class EISMeasurement:
+    __slots__ = ['freq','zdash','potential','zdashneg','Z','phase','current','npoints','tint','ymean','debugtext','Y','YRe','YIm','scale']
+    
+    def __init__(self):
+        self.freq = []
+        self.zdash = []
+        self.potential = []
+        self.zdashneg = []
+        self.Z = []
+        self.phase = []
+        self.current = []
+        self.npoints = []
+        self.tint = []
+        self.ymean = []
+        self.debugtext = []
+        self.Y = []
+        self.YRe = []
+        self.YIm = []
+        self.scale = 100000 # standard set to mega ohms
 
 class jparse:    
     @property
@@ -187,10 +206,14 @@ class jparse:
         self.files = []
         self._parsedData = self._parse(filename)
         self.experimentIndex = 0
+        self.experimentToFileMap = {}
         self._data = self._simplify()
-       
         
     def _parse(self, filenames):
+        # takes in the files
+        # parses the raw data to an object
+        # simplifies the values and adds it to the 'data' object
+        
         self._getFilenames(filenames)
         
         try:
@@ -232,9 +255,11 @@ class jparse:
             rawData = self._parsedData[file]
             for measurement in rawData.measurements:
                 currentMethod = self._getMethodType(measurement.method).upper()
-                print(currentMethod)
                 if currentMethod in self._methodType.SWV or currentMethod in self._methodType.CV:
                     simplifiedData[self._experimentList[experimentIndex]] = self._getXYDataPoints(measurement)
+                if currentMethod in self._methodType.EIS:
+                    simplifiedData[self._experimentList[experimentIndex]] = self._getEISDataPoints(measurement)
+                self.experimentToFileMap[self._experimentList[experimentIndex]] = file
                 experimentIndex = experimentIndex + 1
         
         return simplifiedData
@@ -248,6 +273,42 @@ class jparse:
                 ax.yvalues.append(y.v)
                 pos = pos + 1
         return ax
+    
+    def _getEISDataPoints(self, measurement):
+        eisdata = EISMeasurement()                   
+        for eis in measurement.eisdatalist:
+            for value in eis.dataset.values:
+                if value.unit.q is not None:
+                    v = []
+                    for c in value.datavalues:
+                        v.append(c.v)
+                    if value.unit.q == "Frequency":
+                        eisdata.freq = v
+                    if value.unit.q == "Z'":
+                        eisdata.zdash = v
+                    if value.unit.q == "Potential'":
+                        eisdata.potential = v
+                    if value.unit.q == "-Z''":
+                        eisdata.zdashneg = v
+                    if value.unit.q == "Z":
+                        eisdata.Z = v
+                    if value.unit.q == "-Phase":
+                        eisdata.phase = v
+                    if value.unit.q == "npoints":
+                        eisdata.npoints = v
+                    if value.unit.q == "tint":
+                        eisdata.tint = v
+                    if value.unit.q == "ymean":
+                        eisdata.ymean = v
+                    if value.unit.q == "debugtext":
+                        eisdata.debugtext = v
+                    if value.unit.q == "Y":
+                        eisdata.Y = v
+                    if value.unit.q == "Y'":
+                        eisdata.YRe = v
+                    if value.unit.q == "Y''":
+                        eisdata.YIm = v
+        return eisdata
             
     def _getFilenames(self, files):
         for f in files:
@@ -262,3 +323,7 @@ class jparse:
             if "METHOD_ID" in line:
                 methodName = line.split("=")[1]
         return methodName
+    
+    def inFile(self, experimentLabel):
+        if experimentLabel in self.experimentToFileMap:
+            print(experimentLabel + ' is in ' +  self.experimentToFileMap[experimentLabel] + ".pssession")

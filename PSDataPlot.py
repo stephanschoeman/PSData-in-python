@@ -14,7 +14,7 @@ class axis:
         self.xvalues = []
         self.yvalues = []
 
-class PSDataPlot:
+class PSPlot:
     @property
     def titles(self):
         return self._titles
@@ -33,7 +33,7 @@ class PSDataPlot:
         self._filterOnMethod = True
         self._methodFilter = val
     
-    def __init__(self, filename):
+    def __init__(self, PSData):
         self._filterOnMethod = False
         self._methodFilter = ''  
         self.methodType = MethodType()
@@ -42,50 +42,47 @@ class PSDataPlot:
         self.units_on = True
         self._experimentList = []
         self.eisTypes = EISMeasurement()
-        self.datapoints = {}
+        self.PSData = PSData
         self.files = []
-        self.data = self._parse(filename)
         self._plots = {}
         self._titles = []
         self._titlesOn = False
         self._titleIndex = 0
         self.splitGraphs = False
     
-    def plot(self, PSObject, experimentLabels = ''):
+    def show(self, experimentLabels = ''):
         # Experimental, use at own risk
-        if not PSObject._jsonParsed:
-            return
 
         if self._titlesOn:        
-            graphCount = PSObject._getGraphCount()
+            graphCount = self._getGraphCount()
             if len(self._titles) != graphCount:
                 print('Title count incorrect. Set ' + str(len(self._titles)) + '/' + str(graphCount))
                 return
         
         experimentIndex = 0
-        for file in self.files:
-            data = self.data[file]
-            canPlotAll = False
-            for measurement in data.measurements:
-                canplot = True
-                currentMethod = self._getMethodType(measurement.method).upper()
-                
-                if self._filterOnMethod and not currentMethod in self._methodFilter:
-                    canplot = False
+        canPlotAll = False
+        for currentMethod in self.PSData.experimentList:    
+            canplot = True
+            
+            if self._filterOnMethod and not self._methodFilter in currentMethod:
+                # filtermethod set and check the method
+                canplot = False
                     
-                if not experimentLabels == '' and canplot:
-                    canplot =  self._experimentList[experimentIndex] in experimentLabels
+            if not experimentLabels == '' and canplot:
+                # check if this is the experiment we want to plot, if experimentLabels is set
+                canplot =  self.PSData.experimentList[experimentIndex] in experimentLabels
+        
+            if canplot:
+                canPlotAll = True
+                if 'SWV' in currentMethod:
+                    self._SWVAnalysis(self.PSData.data[self.PSData.experimentList[experimentIndex]],experimentIndex)
+                if 'CV' in currentMethod:
+                    self._CVAnalysis(self.PSData.data[self.PSData.experimentList[experimentIndex]],experimentIndex)
+                if 'EIS' in currentMethod:
+                    self._EISAnalysis(self.PSData.data[self.PSData.experimentList[experimentIndex]],experimentIndex)
                     
-                if canplot:
-                    if currentMethod in self.methodType.SWV:
-                        self._SWVAnalysis(measurement,experimentIndex)
-                    elif currentMethod in self.methodType.EIS:
-                        self._EISAnalysis(measurement, experimentIndex)
-                    else:
-                        self._CVAnalysis(measurement, experimentIndex)
-                    canPlotAll = True
-                experimentIndex = experimentIndex + 1
-                    
+            experimentIndex = experimentIndex + 1
+            
         if canPlotAll:
             plt.show()
         else:
@@ -95,27 +92,27 @@ class PSDataPlot:
                 print('No data found for: ' + self.methodFilter)
                 
     def _getGraphCount(self):
-        eisCount =  len([i for i, s in enumerate(self._experimentList) if self.methodType.EIS in s])*2
-        swvCount = len([ i for i, s in enumerate(self._experimentList) if self.methodType.SWV in s])
-        cvCount = len([i for i, s in enumerate(self._experimentList) if self.methodType.CV in s])
-        overallCount = 0
+        ''' NB, change the amount of EIS graphs as they get developed '''
+        eisCount =  len([i for i, s in enumerate(self.PSData.experimentList) if 'EIS' in s])*3
+        swvCount = len([ i for i, s in enumerate(self.PSData.experimentList) if 'SWV' in s])
+        cvCount = len([i for i, s in enumerate(self.PSData.experimentList) if 'CV' in s])
 
-        if not self.methodFilter in self.methodType.EIS:
+        # set to zero those we do not want to plot
+        if not self.methodFilter in 'EIS':
             eisCount = 0
-            overallCount += 2
-        if not self.methodFilter in self.methodType.SWV:
+        if not self.methodFilter in 'SWV':
             swvCount = 0
-            overallCount += 1
-        if not self.methodFilter in self.methodType.CV:
+        if not self.methodFilter in 'CV':
             cvCount = 0
-            overallCount += 1
         
         graphCount = 0
         if self.splitGraphs:
+            # individual graphs, so count all
             graphCount = eisCount + swvCount + cvCount
         else:
+            # all of each sort on a graph
             if eisCount > 0:
-                graphCount += 2
+                graphCount += 3
             if swvCount > 0:
                 graphCount += 1
             if cvCount > 0:
@@ -124,13 +121,14 @@ class PSDataPlot:
         return graphCount
                 
     def _SWVAnalysis(self, measurement, experimentIndex):
-        units = []
         titleIndex = 0
         if self.splitGraphs:
+            # just create a new graph every time
             figx, axx = plt.subplots()
             axx.grid(True)
             titleIndex = self._titleIndex
         else:
+            # check the dictionary for the graphs and add if exists
             if not 'swv' in self._plots:
                 figx, axx = plt.subplots()
                 axx.grid(True)
@@ -142,40 +140,42 @@ class PSDataPlot:
                 figx = plotdata[0]
                 axx = plotdata[1]
                 titleIndex = plotdata[2]
+        
+        # generate the baseline
+        self.baseline.generateBaseline(measurement.xvalues, measurement.yvalues)
+        
+        # subtract the baseline
+        pos = 0
         ax = axis()
-        for curve in measurement.curves:
-            self.baseline.generateBaseline(curve.xaxisdataarray.datavalues, curve.yaxisdataarray.datavalues)
-            if self.units_on and len(units) <= 0:
-                units.append(self._getUnits(curve.title))
-            pos = 0
-            for y in curve.yaxisdataarray.datavalues:
-                ax.xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
-                ax.yvalues.append(self.baseline.subtract(curve.xaxisdataarray.datavalues[pos].v,y.v))
-                pos = pos + 1
-            self.datapoints[self._experimentList[experimentIndex]] = ax
-            if self.units_on:
-                axx.set_xlabel(units[0][0])
-                axx.set_ylabel(units[0][1])
-            axx.plot(ax.xvalues, ax.yvalues, label=self._experimentList[experimentIndex])
-            if self.splitGraphs:
-                if self._titlesOn:
-                    axx.set_title(self.titles[titleIndex])
-                else:
-                    axx.set_title(self._experimentList[experimentIndex])
+        for y in measurement.yvalues:
+            ax.xvalues.append(measurement.xvalues[pos])
+            ax.yvalues.append(self.baseline.subtract(measurement.xvalues[pos],y))
+            pos = pos + 1
+
+        axx.plot(ax.xvalues, ax.yvalues, label=self.PSData.experimentList[experimentIndex])
+        if self.units_on:
+            axx.set_xlabel('V')
+            axx.set_ylabel('uA') # ToDo: change this based on the scale
+        if self.splitGraphs:
+            if self._titlesOn:
+                axx.set_title(self.titles[titleIndex])
             else:
-                axx.legend(bbox_to_anchor=(1.05,1.05))
-                if self._titlesOn:
-                   axx.set_title(self.titles[titleIndex])
+                axx.set_title(self.PSData.experimentList[experimentIndex])
+        else:
+            axx.legend(bbox_to_anchor=(1.05,1.05))
+            if self._titlesOn:
+               axx.set_title(self.titles[titleIndex])
                    
                             
     def _CVAnalysis(self, measurement, experimentIndex):
-        units = []
         if self.splitGraphs:
+            # just create a new graph every time
             figx, axx = plt.subplots()
             titleIndex = self._titleIndex
             self._titleIndex += 1
             axx.grid(True)
         else:
+            # check the dictionary for the graphs and add if exists
             if not 'cv' in self._plots:
                 figx, axx = plt.subplots()
                 axx.grid(True)
@@ -187,50 +187,28 @@ class PSDataPlot:
                 figx = plotdata[0]
                 axx = plotdata[1]
                 titleIndex = plotdata[2]
-        ax = axis()
-        for curve in measurement.curves:
-            if self.units_on and len(units) <= 0:
-                units.append(self._getUnits(curve.title))
-            pos = 0
-            for y in curve.yaxisdataarray.datavalues:
-                ax.xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
-                ax.yvalues.append(y.v)
-                pos = pos + 1
-            self.datapoints[self._experimentList[experimentIndex]] = ax
-        axx.plot(ax.xvalues, ax.yvalues, label=self._experimentList[experimentIndex])
+
+        axx.plot(measurement.xvalues, measurement.yvalues, label=self.PSData.experimentList[experimentIndex])
         if self.units_on:
-            axx.set_xlabel(units[0][0])
-            axx.set_ylabel(units[0][1])
+            axx.set_xlabel('V')
+            axx.set_ylabel('uA') # ToDo: change this based on the scale
         if self.splitGraphs:
             if self._titlesOn:
                axx.set_title(self.titles[titleIndex])
                self._titleIndex += 1
             else:
-                axx.set_title(self._experimentList[experimentIndex])
+                axx.set_title(self.PSData.experimentList[experimentIndex])
         else:
             axx.legend(bbox_to_anchor=(1.05,1.05))
             if self._titlesOn:
                    axx.set_title(self.titles[titleIndex])
 
     def _EISAnalysis(self, measurement, experimentIndex):
-        eisdata = {}                    
-        for eis in measurement.eisdatalist:
-            for value in eis.dataset.values:
-                v = []
-                for c in value.datavalues:
-                    val = c.v
-                    if value.unit.q == self.eisTypes.zdash or value.unit.q == self.eisTypes.zdashneg:
-                        val = c.v/self.eisTypes.scale
-                    if value.unit.q == self.eisTypes.YIm or value.unit.q == self.eisTypes.YRe:
-                        val = c.v*self.eisTypes.scale/100
-                    v.append(val)
-                eisdata[value.unit.q] = v                                    
+        self._plotEISNyq(measurement, experimentIndex)
+        self._plotEISZdashes(measurement, experimentIndex)
+        self._plotEISYdash(measurement, experimentIndex)
         
-        self._plotEISNyq(eisdata, experimentIndex)
-        self._plotEISZdashes(eisdata, experimentIndex)
-        self._plotEISYdash(eisdata, experimentIndex)
-        
-    def _plotEISNyq(self, eisdata, experimentIndex):
+    def _plotEISNyq(self, measurement, experimentIndex):
         if self.splitGraphs:
             fig, ax1 = plt.subplots()
             ax2 = ax1.twinx()
@@ -250,9 +228,9 @@ class PSDataPlot:
                 ax2 = plotdata[2]
                 titleIndex = plotdata[3]
         s = 4
-        ax1.loglog(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.Z],'s-', label=self._experimentList[experimentIndex], markersize=s)
+        ax1.loglog(measurement.freq, measurement.Z,'s-', label=self.PSData.experimentList[experimentIndex], markersize=s)
         ax1.grid(True)
-        ax2.plot(eisdata[self.eisTypes.freq], eisdata[self.eisTypes.phase],'*-', label=self._experimentList[experimentIndex], markersize=s)
+        ax2.plot(measurement.freq, measurement.phase,'*-', label=self.PSData.experimentList[experimentIndex], markersize=s)
         ax2.grid(True)
         b, t = ax1.get_ylim()
         b2, t2 = ax2.get_ylim()
@@ -265,11 +243,11 @@ class PSDataPlot:
            ax1.set_title(self.titles[titleIndex])
            
         if self.splitGraphs:
-            ax2.set_title(self._experimentList[experimentIndex])
+            ax2.set_title(self.PSData.experimentList[experimentIndex])
         else:
             ax2.legend(bbox_to_anchor=(1.3,1.05))
             
-    def _plotEISYdash(self, eisdata, experimentIndex):
+    def _plotEISYdash(self, measurement, experimentIndex):
         if self.splitGraphs:
             fig, ax1 = plt.subplots()
             ax2 = ax1.twinx()
@@ -290,18 +268,18 @@ class PSDataPlot:
                 titleIndex = plotdata[3]
         s = 4
         ax1.grid(True)
-        ax1.plot(eisdata[self.eisTypes.YRe], eisdata[self.eisTypes.YIm],'*-', label=self._experimentList[experimentIndex], markersize=s)
+        ax1.plot(measurement.YRe, measurement.YIm,'*-', label=self.PSData.experimentList[experimentIndex], markersize=s)
         if self._titlesOn:
            ax1.set_title(self.titles[titleIndex])
         ax1.set_xlabel(self.eisTypes.YRe + "/mS")
         ax1.set_ylabel(self.eisTypes.YIm + "/mS")
            
         if self.splitGraphs:
-            ax1.set_title(self._experimentList[experimentIndex])
+            ax1.set_title(self.PSData.experimentList[experimentIndex])
         else:
             ax1.legend(bbox_to_anchor=(1.3,1.05))
            
-    def _plotEISZdashes(self, eisdata, experimentIndex):
+    def _plotEISZdashes(self, measurement, experimentIndex):
         if self.splitGraphs:
             fig2, ax3 = plt.subplots()
             titleIndex = self._titleIndex
@@ -319,16 +297,16 @@ class PSDataPlot:
                 titleIndex = plotdata[2]
         s = 4
         ax3.grid(True)
-        ax3.plot(eisdata[self.eisTypes.zdash], eisdata[self.eisTypes.zdashneg],'o-', label=self._experimentList[experimentIndex], markersize=s)
+        ax3.plot(measurement.zdash, measurement.zdashneg,'o-', label=self.PSData.experimentList[experimentIndex], markersize=s)
         ax3.set_xlabel(self.eisTypes.zdashneg + "/" + self._getScale() + "$\Omega$")
         ax3.set_ylabel(self.eisTypes.zdash + "/" + self._getScale() + "$\Omega$")
-        self.datapoints[self.experimentList[experimentIndex]] = eisdata
+
         if self.splitGraphs:
             if self._titlesOn:
                ax3.set_title(self.titles[titleIndex])
                self._titleIndex += 1
             else:
-                ax3.set_title(self._experimentList[experimentIndex])
+                ax3.set_title(self.PSData.experimentList[experimentIndex])
         else:
             ax3.legend(bbox_to_anchor=(1.05,1.05))
             if self._titlesOn:
@@ -389,8 +367,9 @@ class Baseline:
             try:
                 if self.endPosition == -1:
                     self.endPosition = len(y) - self.startPosition
-                self._gradient = (y[self.startPosition].v - y[self.endPosition].v)/(x[self.startPosition].v - x[self.endPosition].v)
-                self._constant = y[self.startPosition].v - (x[self.startPosition].v*self._gradient)
+                print(self.endPosition)
+                self._gradient = (y[self.startPosition] - y[self.endPosition])/(x[self.startPosition] - x[self.endPosition])
+                self._constant = y[self.startPosition] - (x[self.startPosition]*self._gradient)
                 self._generatedBaseline = True
             except:
                 print('Exception: Could not generate baseline. Check validity of startPosition and endPosition.')
