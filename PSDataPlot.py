@@ -207,6 +207,7 @@ class PSPlot:
         self._plotEISNyq(measurement, experimentIndex)
         self._plotEISZdashes(measurement, experimentIndex)
         self._plotEISYdash(measurement, experimentIndex)
+        self._plotEISCap(measurement, experimentIndex)
         
     def _plotEISNyq(self, measurement, experimentIndex):
         if self.splitGraphs:
@@ -279,6 +280,62 @@ class PSPlot:
         else:
             ax1.legend(bbox_to_anchor=(1.3,1.05))
            
+    def _plotEISCap(self, measurement, experimentIndex):
+        if self.splitGraphs:
+            fig2, ax3 = plt.subplots()
+            titleIndex = self._titleIndex
+            self._titleIndex += 1
+        else:
+            if not 'Cap' in self._plots:
+                fig2, ax3 = plt.subplots()
+                titleIndex = self._titleIndex
+                self._titleIndex += 1
+                self._plots['Cap'] = [fig2, ax3, titleIndex]
+            else:
+                plotdata = self._plots['Cap']        
+                fig2 = plotdata[0]
+                ax3 = plotdata[1]
+                titleIndex = plotdata[2]
+        s = 4
+        ax3.grid(True)
+        
+        pos = 0
+        cd = []
+        cdd = []
+        for zdd in measurement.zdashneg:
+            denom = 2*3.141592653589793*measurement.freq[pos]*(measurement.zdash[pos]*measurement.zdash[pos] + measurement.zdashneg[pos]*measurement.zdashneg[pos])
+            cdd.append(zdd/(denom))
+            cd.append(measurement.zdash[pos]/(denom))
+            pos += 1
+            
+        
+        cddMod = []
+        cdMod = []
+        
+        XUnits = self._setScale(max(cd))
+        YUnits = self._setScale(max(cdd))
+        
+        for cdash in cd:
+            cdMod.append(cdash/XUnits['scale'])
+            
+        for cdashdash in cdd:
+            cddMod.append(cdashdash/YUnits['scale'])
+            
+        ax3.plot(cddMod,cdMod,'o-', label=self.PSData.experimentList[experimentIndex], markersize=s)
+        ax3.set_xlabel("C'/" + XUnits['unit'] + 'F')
+        ax3.set_ylabel("C''/" + YUnits['unit'] + 'F')
+
+        if self.splitGraphs:
+            if self._titlesOn:
+               ax3.set_title(self.titles[titleIndex])
+               self._titleIndex += 1
+            else:
+                ax3.set_title(self.PSData.experimentList[experimentIndex])
+        else:
+            ax3.legend(bbox_to_anchor=(1.25,1.05))
+            if self._titlesOn:
+               ax3.set_title(self.titles[titleIndex])
+               
     def _plotEISZdashes(self, measurement, experimentIndex):
         if self.splitGraphs:
             fig2, ax3 = plt.subplots()
@@ -311,6 +368,33 @@ class PSPlot:
             ax3.legend(bbox_to_anchor=(1.05,1.05))
             if self._titlesOn:
                ax3.set_title(self.titles[titleIndex])
+               
+    def _setScale(self, value):
+        print(value)
+        ret = {}
+        if value > 0.001:
+            ret['unit'] = ''
+            ret['scale'] = 1
+        if value < 0.001:
+            ret['unit'] = 'm'
+            ret['scale'] = 0.001
+        if value < 0.000001:
+            ret['unit'] = '\u03BC'
+            ret['scale'] = 0.000001
+        if value < 0.00000001:
+            ret['unit'] = 'n'
+            ret['scale'] = 0.00000001
+        if value < 0.0000000001:
+            ret['unit'] = 'p'
+            ret['scale'] = 0.0000000001
+        if value < 0.000000000001:
+            ret['unit'] = 'f'
+            ret['scale'] = 0.000000000001
+        if value < 0.00000000000001:
+            ret['unit'] = 'a'
+            ret['scale'] = 0.00000000000001
+        return ret
+        
         
     def _getScale(self):
         if self.eisTypes.scale == pow(10,3):
