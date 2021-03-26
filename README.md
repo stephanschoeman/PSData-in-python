@@ -7,56 +7,68 @@
  - Cyclic voltammetry
  - Electrical impedance spectroscopy
  
+ **Files:**
+ - PSData.py : this parses the .pssession data
+ - SimplePSData.py : this is an example file to use the PSData object
+ - PSDataPlot.py : this is the additional plotting functionality
+ 
  **Get started:**
  
  Download and install the dependencies if required.
- Place PSData.py and ReadPsData.py in the same directory.
- Open ReadPsData.py
- Replace the file directory in PSSource('') with the .pssession example provided.
- Run the code and you should see a plot of the example data.
+ Place PSData.py and SimplePSData.py in the same directory.
+ Open SimplePSData.py
+ Replace the file directory in .jparse('') with the .pssession example provided.
+ Run the code and you will be able to access the parsed data with:
+ ```
+ print(simpleData.experimentList) # list the experiments
+ print(simpleData.data['SWV 1'].xvalues) # access the x values of the first experiment
+ ```
+ 
+ and that is about all you need to get started!
  
  **Dependencies:**
   - SimpleNamespace
   - simplejson
-  - matplotlib
+  - matplotlib (Only if you use PSDataPlot.py)
 
-**How to use:**
+**PSData.py functionality:**
 
-Import PSData:
-```
-import PSData as PS
-```
+Assuming you use the following line of code to get your parsed data:
 
-Create the data object that will contain all your experiment information. The object creation automatically loads the data into the object:
-```
-data = PS.jparse([r'..\File.pssession'])
-```
-Note that the input requires an array for the file locations.
+```simpleData = PS.jparse([r'C:\A.pssession',r'C:\B.pssession'])```
 
-You can then plot the data by using:
-```
-data.plot()
-```
+- List your experiments:
+  ```simpleData.experimentList```
+  These are listed as the program finds them.
+- Find out where the experiment data comes from:
+  ```simpleData.inFile('SWV 1')```
+  The experiment tags come from the experimentList.
+- SWV and CV x and y values can be accessed like this:
+  ```simpleData.data['SWV 1'].xvalues``` and ```simpleData.data['SWV 1'].yvalues```
+- EIS has the following parameters:
+  - ```.freq```
+  - ```.zdash```
+  - ```.potential```
+  - ```.zdashneg```
+  - ```.Z```
+  - ```.phase```
+  - ```.npoints```
+  - ```.tint```
+  - ```.ymean```
+  - ```.debugtext```
+  - ```.Y```
+  - ```.YRe``` (Ydash)
+  - ```.YIm``` (Ydashdash)
+  - These can be accessed in a similar way: ```simpleData.data['EIS 1'].potential```
+  - They will not necessarily be available, depending on your experiment
 
-and that is about all you need to get started!
+**PSDataPlot.py functionality:**
 
-**Additional functionality:**
-- ```data.methodFilter = data.methodType.SWV``` will filter all plots on SWV. Also available: CV and EIS
-- ```data.baseline``` (only available for SWV):
-  - ```.startPosition``` set to int value of the position that you want to use for the baseline. Must be set for baseline to work.
-  - ```.endPosition``` set to int value of the position that you want to use for the baseline. If not set, taken as ```len(measurements) - startPosition```
-- ```.experimentList``` gives you all of the tags for the experimets that are in the object.
-- ```.plot(['SWV 1','CV 1'])``` or ```.plot([data.experimentList[0],data.experimentList[5]])``` will only plot the experiments with these tags. The plot legend also contains the experiment tags.
-- ```.eisTypes.scale = 1000``` sets the scale of the Nyquist plot. Usable scales: k, M, G, T. You can expand this list as required.
-- The datapoints within the experiments are stored in a dictionary ```.datapoints```. This can be accessed via the experiments labels ```data.datapoints[data.experimentList[0]]``` or ```data.datapoints['CV 1']```. EIS data is stored in an EIS object and has a few different tags, while all other measurements are stored in an axis object with xvalues and yvalues:
-  - EIS phase, for example: ```data.datapoints[data.experimentList[i]]['-Phase']``` You can view the EIS tags within the ```.eisTypes``` object.
-  - X-axis values for all other: ```data.datapoints[data.experimentList[i]].xvalues```
-- You can process multiple files at once:
-  - When creating the PSData object, place the file locations as an array when parsing: ```data = PS.jparse([r'floc\file1.pssession', r'floc\file2.pssession'])```
-  - The results will be grouped by their methods and plotted together, but you can disable this by setting ```data.splitGraphs = False```
-  - The data is parsed seperately into different objects, so a dictionary of these objects are created based on the file names: ```data.data['A']``` will give you access to the PSData object of file A.pssession. The ```data.datapoints[]``` is still accessible without having to reference the filenames.
-  - The tags of the experiments continue between files. So if A contains 3xSWV and B contains 2xSWV and 2XCV, the tag list will be: ```[SWV 1, SWV 2, SWV 3, SWV 4, SWV 5, CV 1, CV 2]```
-- Graph titles: ```.titles = ['All unfiltered SWV data', 'CV unfiltered', 'Nyq', 'ZvsZdash']``` is an example of setting the graph titles. The order is important, so run it once to check in which order the graphs are shown. The amount of required titles are calculated when you set the ```.titles``` array, and it will print out the required title count if you have insufficient/too many titles.
+If you want to use the plotting 'library', create the plot object from the simpleData:
+
+```plot = PSP.PSPlot(simpleData)```
+
+to do -> finish this section
 
 **Example plots:**
 
