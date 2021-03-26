@@ -168,7 +168,7 @@ class axis:
         self.yvalues = []
 
 class EISMeasurement:
-    __slots__ = ['freq','zdash','potential','zdashneg','Z','phase','current','npoints','tint','ymean','debugtext','Y','YRe','YIm','scale']
+    __slots__ = ['freq','zdash','potential','zdashneg','Z','phase','current','npoints','tint','ymean','debugtext','Y','YRe','YIm','scale','Cdash','Cdashdash']
     
     def __init__(self):
         self.freq = []
@@ -185,6 +185,8 @@ class EISMeasurement:
         self.Y = []
         self.YRe = []
         self.YIm = []
+        self.Cdash = []
+        self.Cdashdash = []
         self.scale = 100000 # standard set to mega ohms
 
 class jparse:    
@@ -308,6 +310,19 @@ class jparse:
                         eisdata.YRe = v
                     if value.unit.q == "Y''":
                         eisdata.YIm = v
+                        
+        pos = 0
+        cd = []
+        cdd = []
+        for zdd in eisdata.zdashneg:
+            denom = 2*3.141592653589793*eisdata.freq[pos]*(eisdata.zdash[pos]*eisdata.zdash[pos] + eisdata.zdashneg[pos]*eisdata.zdashneg[pos])
+            cdd.append(zdd/(denom))
+            cd.append(eisdata.zdash[pos]/(denom))
+            pos += 1
+        
+        eisdata.Cdash = cd
+        eisdata.Cdashdash = cdd
+        
         return eisdata
             
     def _getFilenames(self, files):

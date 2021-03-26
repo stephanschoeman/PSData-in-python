@@ -299,27 +299,17 @@ class PSPlot:
         s = 4
         ax3.grid(True)
         
-        pos = 0
-        cd = []
-        cdd = []
-        for zdd in measurement.zdashneg:
-            denom = 2*3.141592653589793*measurement.freq[pos]*(measurement.zdash[pos]*measurement.zdash[pos] + measurement.zdashneg[pos]*measurement.zdashneg[pos])
-            cdd.append(zdd/(denom))
-            cd.append(measurement.zdash[pos]/(denom))
-            pos += 1
-            
+        XUnits = self._setScale(max(measurement.Cdash))
+        YUnits = self._setScale(max(measurement.Cdashdash))
         
-        cddMod = []
         cdMod = []
-        
-        XUnits = self._setScale(max(cd))
-        YUnits = self._setScale(max(cdd))
-        
-        for cdash in cd:
+        cddMod = []
+        for cdash in measurement.Cdash:
             cdMod.append(cdash/XUnits['scale'])
             
-        for cdashdash in cdd:
+        for cdashdash in measurement.Cdashdash:
             cddMod.append(cdashdash/YUnits['scale'])
+            
             
         ax3.plot(cddMod,cdMod,'o-', label=self.PSData.experimentList[experimentIndex], markersize=s)
         ax3.set_xlabel("C'/" + XUnits['unit'] + 'F')
@@ -370,7 +360,6 @@ class PSPlot:
                ax3.set_title(self.titles[titleIndex])
                
     def _setScale(self, value):
-        print(value)
         ret = {}
         if value > 0.001:
             ret['unit'] = ''

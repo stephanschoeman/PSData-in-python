@@ -9,7 +9,8 @@ This is an example on how to use the PSData.py file
 import PSData as PS
 
 # just paste the file source here:
-simpleData = PS.jparse([r'floc\A.pssession',r'floc\B.pssession', r'floc\C.pssession'])
+simpleData = PS.jparse([r'C:\Users\Stephan\Desktop\bik\F1_Ab.pssession',r'C:\Users\Stephan\Desktop\bik\F2_Ab.pssession'
+                        ,r'C:\Users\Stephan\Desktop\bik\F1_AG.pssession', r'C:\Users\Stephan\Desktop\bik\F2_AG.pssession'])#, r'C:\Users\Stephan\Desktop\bik\sasa\E.pssession'])
 
 # and then you can access the experiment list like this:
 #print(simpleData.experimentList)
@@ -33,12 +34,12 @@ simpleData = PS.jparse([r'floc\A.pssession',r'floc\B.pssession', r'floc\C.pssess
 #print(simpleData.data['EIS 1'].phase)
 
 """ PS Plot """
-#import PSDataPlot as PSP # this is optional. Only for using the plot functionality I build.
+import PSDataPlot as PSP # this is optional. Only for using the plot functionality I build.
 
 # pass the simpleData to the plotting object
-#plot = PSP.PSPlot(simpleData)
+plot = PSP.PSPlot(simpleData)
 #plot.baseline.startPosition = 5
 #plot.baseline.endPosition = 65
 #plot.methodFilter = 'EIS'
 #plot.splitGraphs = True
-#plot.show()
+plot.show()
