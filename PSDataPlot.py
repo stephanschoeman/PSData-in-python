@@ -78,6 +78,7 @@ class PSPlot:
                     self._SWVAnalysis(self.PSData.data[self.PSData.experimentList[experimentIndex]],experimentIndex)
                 if 'CV' in currentMethod:
                     self._CVAnalysis(self.PSData.data[self.PSData.experimentList[experimentIndex]],experimentIndex)
+                    #print('CV')
                 if 'EIS' in currentMethod:
                     self._EISAnalysis(self.PSData.data[self.PSData.experimentList[experimentIndex]],experimentIndex)
                     
@@ -121,12 +122,22 @@ class PSPlot:
         return graphCount
                 
     def _SWVAnalysis(self, measurement, experimentIndex):
-        titleIndex = 0
+        # get units from the dictionary
+        units = {}
+        if self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Units'] is not None:
+            units = self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Units']
+        else:
+            units['x']['unit'] = ''
+            units['y']['unit'] = ''
+            units['x']['scale'] = 1
+            units['y']['scale'] = 1
+        
         if self.splitGraphs:
             # just create a new graph every time
             figx, axx = plt.subplots()
             axx.grid(True)
             titleIndex = self._titleIndex
+            self._titleIndex += 1
         else:
             # check the dictionary for the graphs and add if exists
             if not 'swv' in self._plots:
@@ -146,16 +157,30 @@ class PSPlot:
         
         # subtract the baseline
         pos = 0
-        ax = axis()
+        ax_baseline = axis()
         for y in measurement.yvalues:
-            ax.xvalues.append(measurement.xvalues[pos])
-            ax.yvalues.append(self.baseline.subtract(measurement.xvalues[pos],y))
+            ax_baseline.xvalues.append(measurement.xvalues[pos]/units['x']['scale'])
+            ax_baseline.yvalues.append(self.baseline.subtract(measurement.xvalues[pos],y)/units['y']['scale'])
             pos = pos + 1
+        
+        # kind of backwards, translated to Ampere, and then we determine what would be the better scale
+        XUnits = self._setScale(max(ax_baseline.xvalues))
+        YUnits = self._setScale(max(ax_baseline.yvalues))
+        
+        yMod = []
+        xMod = []
+        
+        for x in ax_baseline.xvalues:
+            xMod.append(x/XUnits['scale'])
+            
+        for y in ax_baseline.yvalues:
+            yMod.append(y/YUnits['scale'])
 
-        axx.plot(ax.xvalues, ax.yvalues, label=self.PSData.experimentList[experimentIndex])
+        axx.plot(xMod, yMod, label=self.PSData.experimentList[experimentIndex])
         if self.units_on:
-            axx.set_xlabel('V')
-            axx.set_ylabel('uA') # ToDo: change this based on the scale
+            axx.set_xlabel(XUnits['unit'] + 'V')
+            axx.set_ylabel(YUnits['unit'] + 'A')
+                
         if self.splitGraphs:
             if self._titlesOn:
                 axx.set_title(self.titles[titleIndex])
@@ -168,6 +193,17 @@ class PSPlot:
                    
                             
     def _CVAnalysis(self, measurement, experimentIndex):
+        
+        # get units from the dictionary
+        units = {}
+        if self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Units'] is not None:
+            units = self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Units']
+        else:
+            units['x']['unit'] = ''
+            units['y']['unit'] = ''
+            units['x']['scale'] = 1
+            units['y']['scale'] = 1
+        
         if self.splitGraphs:
             # just create a new graph every time
             figx, axx = plt.subplots()
@@ -187,15 +223,36 @@ class PSPlot:
                 figx = plotdata[0]
                 axx = plotdata[1]
                 titleIndex = plotdata[2]
+               
+        # convert to ampere
+        pos = 0
+        ax = axis()
+        for y in measurement.yvalues:
+            ax.xvalues.append(measurement.xvalues[pos]/units['x']['scale'])
+            ax.yvalues.append(y/units['y']['scale'])
+            pos = pos + 1
+        
+        # and then go determine a better scale
+        XUnits = self._setScale(max(ax.xvalues))
+        YUnits = self._setScale(max(ax.yvalues))
+        
+        yMod = []
+        xMod = []
+        
+        for x in ax.xvalues:
+            xMod.append(x/XUnits['scale'])
+            
+        for y in ax.yvalues:
+            yMod.append(y/YUnits['scale'])
 
-        axx.plot(measurement.xvalues, measurement.yvalues, label=self.PSData.experimentList[experimentIndex])
+        axx.plot(xMod,yMod, label=self.PSData.experimentList[experimentIndex])
+        
         if self.units_on:
-            axx.set_xlabel('V')
-            axx.set_ylabel('uA') # ToDo: change this based on the scale
+            axx.set_xlabel(XUnits['unit'] + 'V')
+            axx.set_ylabel(YUnits['unit'] + 'A')
         if self.splitGraphs:
             if self._titlesOn:
                axx.set_title(self.titles[titleIndex])
-               self._titleIndex += 1
             else:
                 axx.set_title(self.PSData.experimentList[experimentIndex])
         else:
@@ -228,6 +285,7 @@ class PSPlot:
                 ax1 = plotdata[1]
                 ax2 = plotdata[2]
                 titleIndex = plotdata[3]
+                
         s = 4
         ax1.loglog(measurement.freq, measurement.Z,'s-', label=self.PSData.experimentList[experimentIndex], markersize=s)
         ax1.grid(True)
@@ -269,11 +327,25 @@ class PSPlot:
                 titleIndex = plotdata[3]
         s = 4
         ax1.grid(True)
-        ax1.plot(measurement.YRe, measurement.YIm,'*-', label=self.PSData.experimentList[experimentIndex], markersize=s)
+        
+        XUnits = self._setScale(max(measurement.YRe))
+        YUnits = self._setScale(max(measurement.YIm))
+        
+        yMod = []
+        xMod = []
+        
+        for x in measurement.YRe:
+            xMod.append(x/XUnits['scale'])
+            
+        for y in measurement.YIm:
+            yMod.append(y/YUnits['scale'])
+        
+        
+        ax1.plot(xMod, yMod,'*-', label=self.PSData.experimentList[experimentIndex], markersize=s)
         if self._titlesOn:
            ax1.set_title(self.titles[titleIndex])
-        ax1.set_xlabel(self.eisTypes.YRe + "/mS")
-        ax1.set_ylabel(self.eisTypes.YIm + "/mS")
+        ax1.set_xlabel(self.eisTypes.YRe + "/" + XUnits['unit'] + "S")
+        ax1.set_ylabel(self.eisTypes.YIm + "/" + YUnits['unit'] + "S")
            
         if self.splitGraphs:
             ax1.set_title(self.PSData.experimentList[experimentIndex])
@@ -342,11 +414,24 @@ class PSPlot:
                 fig2 = plotdata[0]
                 ax3 = plotdata[1]
                 titleIndex = plotdata[2]
+                
+                
+        XUnits = self._setScale(max(measurement.zdash))
+        YUnits = self._setScale(max(measurement.zdashneg))
+        
+        xMod = []
+        yMod = []
+        for x in measurement.zdashneg:
+            xMod.append(x/XUnits['scale'])
+            
+        for y in measurement.zdash:
+            yMod.append(y/YUnits['scale'])
+            
         s = 4
         ax3.grid(True)
-        ax3.plot(measurement.zdash, measurement.zdashneg,'o-', label=self.PSData.experimentList[experimentIndex], markersize=s)
-        ax3.set_xlabel(self.eisTypes.zdashneg + "/" + self._getScale() + "$\Omega$")
-        ax3.set_ylabel(self.eisTypes.zdash + "/" + self._getScale() + "$\Omega$")
+        ax3.plot(xMod, yMod,'o-', label=self.PSData.experimentList[experimentIndex], markersize=s)
+        ax3.set_xlabel(self.eisTypes.zdashneg + "/" + XUnits['unit'] + "$\Omega$")
+        ax3.set_ylabel(self.eisTypes.zdash + "/" + YUnits['unit'] + "$\Omega$")
 
         if self.splitGraphs:
             if self._titlesOn:
@@ -360,28 +445,43 @@ class PSPlot:
                ax3.set_title(self.titles[titleIndex])
                
     def _setScale(self, value):
+        value = abs(value)
         ret = {}
-        if value > 0.001:
-            ret['unit'] = ''
-            ret['scale'] = 1
-        if value < 0.001:
+        ret['unit'] = ''
+        ret['scale'] = 1
+        
+        if value < 0.009:
             ret['unit'] = 'm'
             ret['scale'] = 0.001
-        if value < 0.000001:
+        if value < 0.000009:
             ret['unit'] = '\u03BC'
             ret['scale'] = 0.000001
-        if value < 0.00000001:
+        if value < 0.00000009:
             ret['unit'] = 'n'
             ret['scale'] = 0.00000001
-        if value < 0.0000000001:
+        if value < 0.0000000009:
             ret['unit'] = 'p'
             ret['scale'] = 0.0000000001
-        if value < 0.000000000001:
+        if value < 0.000000000009:
             ret['unit'] = 'f'
             ret['scale'] = 0.000000000001
-        if value < 0.00000000000001:
+        if value < 0.00000000000009:
             ret['unit'] = 'a'
             ret['scale'] = 0.00000000000001
+            
+        if value > pow(10,3):
+            ret['unit'] = 'k'
+            ret['scale'] = pow(10,3)
+        if value > pow(10,6):
+            ret['unit'] = 'M'
+            ret['scale'] = pow(10,6)
+        if value > pow(10,9):
+            ret['unit'] = 'G'
+            ret['scale'] = pow(10,9)
+        if value > pow(10,12):
+            ret['unit'] = 'T'
+            ret['scale'] = pow(10,12)
+            
         return ret
         
         
@@ -440,7 +540,6 @@ class Baseline:
             try:
                 if self.endPosition == -1:
                     self.endPosition = len(y) - self.startPosition
-                print(self.endPosition)
                 self._gradient = (y[self.startPosition] - y[self.endPosition])/(x[self.startPosition] - x[self.endPosition])
                 self._constant = y[self.startPosition] - (x[self.startPosition]*self._gradient)
                 self._generatedBaseline = True

@@ -259,13 +259,49 @@ class jparse:
                 currentMethod = self._getMethodType(measurement.method).upper()
                 if currentMethod in self._methodType.SWV or currentMethod in self._methodType.CV:
                     simplifiedData[self._experimentList[experimentIndex]] = self._getXYDataPoints(measurement)
+                    simplifiedData[self._experimentList[experimentIndex] + ' Units'] = self._getXYUnits(measurement)
                 if currentMethod in self._methodType.EIS:
                     simplifiedData[self._experimentList[experimentIndex]] = self._getEISDataPoints(measurement)
                 self.experimentToFileMap[self._experimentList[experimentIndex]] = file
                 experimentIndex = experimentIndex + 1
+
         
         return simplifiedData
+    
+    def _getXYUnits(self, measurement):
+        unit = {}
+        try:
+            xtext = measurement.curves[0].xaxisdataarray.unit.type
+            ytext = measurement.curves[0].yaxisdataarray.unit.type
+            if xtext is not None:
+                unit['x'] = self._unitTextToScale(xtext)
+                unit['y'] = self._unitTextToScale(ytext)
+        except:
+            print('Exception when processing units for SWV or CV.')
+            unit = {}
+        return unit
         
+    
+    def _unitTextToScale(self, text):
+        unit = {}
+        unit['scale'] = 1
+        unit['unit'] = ''
+        
+        if 'Milli' in text:
+            unit['scale'] = 1000
+            unit['unit'] = 'm'
+        if 'Micro' in text:
+            unit['scale'] = 1000000
+            unit['unit'] = "\u03BC"
+        if 'Nano' in text:
+            unit['scale'] = 1000000000
+            unit['unit'] = 'n'
+        if 'Pico' in text:
+            unit['scale'] = 1000000000000
+            unit['unit'] = 'p'
+            
+        return unit
+    
     def _getXYDataPoints(self, measurement):
         ax = axis()
         for curve in measurement.curves:
