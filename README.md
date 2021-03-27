@@ -98,12 +98,9 @@ and then lastly, if you want to plot specific experiments instead, fill in the e
 
 **Example plots:**
 
-Here is a raw SWV experiment plot:
+SWV and Cyclic voltammetry:
 
 ![swv](https://user-images.githubusercontent.com/45431675/112733973-a6483000-8f4b-11eb-96b1-cfd73bab65f0.png)
-
-Cyclic voltammetry:
-
 ![cv](https://user-images.githubusercontent.com/45431675/112733990-ba8c2d00-8f4b-11eb-9045-fff9c78b7b7f.png)
 
 Here is an example of an EIS experiment:
