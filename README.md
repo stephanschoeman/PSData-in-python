@@ -59,8 +59,10 @@ Assuming you use the following line of code to get your parsed data:
   - ```.Y```
   - ```.YRe``` (Ydash)
   - ```.YIm``` (Ydashdash)
-  - These can be accessed in a similar way: ```simpleData.data['EIS 1'].potential```
-  - They will not necessarily be available, depending on your experiment
+  
+  These can be accessed in a similar way: ```simpleData.data['EIS 1'].potential```
+  
+  They will not necessarily be available, depending on your experiment
 
 **PSDataPlot.py functionality:**
 
@@ -68,21 +70,46 @@ If you want to use the plotting 'library', create the plot object from the simpl
 
 ```plot = PSP.PSPlot(simpleData)```
 
-to do -> finish this section
+And then you can plot the data using:
+
+```plot.show()```
+
+The graphs are joined by type, but if you want to split the experiments, set the following:
+
+```plot.splitGraphs = True```
+
+You can set the titles of the graphs by populating the ```plot.titles``` list. If there are three graphs, you obviously need three titles:
+
+```plot.titles = ['Title 1', 'Title 2', 'Title 3']```
+
+You can filter on method to plot only a specific method:
+
+```plot.methodFilter = 'EIS'```
+
+You can set a baseline for SWV graphs by setting the beginning and end points for the baseline. It creates a linear baseline between the two points and subtracts it from the measured values:
+
+```plot.baseline.startPosition = 5```
+
+```plot.baseline.endPosition = 65```
+
+and then lastly, if you want to plot specific experiments instead, fill in the experiment labels of the required experiments:
+
+```plot.show(['SWV 1', 'CV 3'])```
 
 **Example plots:**
 
 Here is a raw SWV experiment plot:
 
-![SWV Raw](https://user-images.githubusercontent.com/45431675/109668244-a7b75000-7b79-11eb-8dc4-b5c7c48f60fa.png)
+![swv](https://user-images.githubusercontent.com/45431675/112733973-a6483000-8f4b-11eb-96b1-cfd73bab65f0.png)
 
-and then I did a baseline subtraction on starting position 7:
+Cyclic voltammetry:
 
-![SWV Baseline](https://user-images.githubusercontent.com/45431675/109668187-95d5ad00-7b79-11eb-8362-1b34b6ae43ad.png)
+![cv](https://user-images.githubusercontent.com/45431675/112733990-ba8c2d00-8f4b-11eb-9045-fff9c78b7b7f.png)
 
-Here is an example of two EIS measurements plotted together:
+Here is an example of an EIS experiment:
 
-![EIS_Comp](https://user-images.githubusercontent.com/45431675/109689101-a3952d80-7b8d-11eb-9017-28dbb52d56c2.png)
+![eis2](https://user-images.githubusercontent.com/45431675/112734013-d099ed80-8f4b-11eb-8336-2d50bc6fab54.png)
+![eis1](https://user-images.githubusercontent.com/45431675/112734016-d42d7480-8f4b-11eb-9b0d-5f0ea4e63a59.png)
 
 Let me know if you have ideas for additional basic functionality.
 
