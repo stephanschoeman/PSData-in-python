@@ -2,18 +2,22 @@
  Load a .pssession file into python for local processing.
  I do a bunch of [Cyclic Voltammetry](https://en.wikipedia.org/wiki/Cyclic_voltammetry) and [Square Wave Voltammetry](https://en.wikipedia.org/wiki/Squarewave_voltammetry) experiments regularly and wrote this Python script to extact my data for some post-processing. The main purpose is to skip additional export steps from the .pssession file, but I added plotting and baseline tools. I use [this](https://www.palmsens.com/product/palmsens4/) device for my measurements.
  
- **Supported experiments:**
+## Supported experiments:
  - Square wave voltammetry (primary)
  - Cyclic voltammetry
  - Electrical impedance spectroscopy
  
- **Files:**
+## Files:
  - PSData.py : this parses the .pssession data
  - SimplePSData.py : this is an example file to use the PSData object
  - PSDataPlot.py : this is the additional plotting functionality
  
- **Get started:**
+## Dependencies:
+  - SimpleNamespace
+  - simplejson
+  - matplotlib (Only if you use PSDataPlot.py)
  
+## Get started: 
  Download and install the dependencies if required.
  Place PSData.py and SimplePSData.py in the same directory.
  Open SimplePSData.py
@@ -25,13 +29,8 @@
  ```
  
  and that is about all you need to get started!
- 
- **Dependencies:**
-  - SimpleNamespace
-  - simplejson
-  - matplotlib (Only if you use PSDataPlot.py)
 
-**PSData.py functionality:**
+## PSData.py functionality:
 
 Assuming you use the following line of code to get your parsed data:
 
@@ -64,7 +63,7 @@ Assuming you use the following line of code to get your parsed data:
   
   They will not necessarily be available, depending on your experiment
 
-**PSDataPlot.py functionality:**
+## PSDataPlot.py functionality:
 
 If you want to use the plotting 'library', create the plot object from the simpleData:
 
@@ -96,7 +95,7 @@ and then lastly, if you want to plot specific experiments instead, fill in the e
 
 ```plot.show(['SWV 1', 'CV 3'])```
 
-**Example plots:**
+## Example plots:
 
 SWV and Cyclic voltammetry:
 
