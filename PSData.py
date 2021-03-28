@@ -259,7 +259,7 @@ class jparse:
                 currentMethod = self._getMethodType(measurement.method).upper()
                 if currentMethod in self._methodType.SWV or currentMethod in self._methodType.CV:
                     simplifiedData[self._experimentList[experimentIndex]] = self._getXYDataPoints(measurement)
-                    simplifiedData[self._experimentList[experimentIndex] + ' Units'] = self._getXYUnits(measurement)
+                    simplifiedData[self._experimentList[experimentIndex] + ' Details'] = self._getXYUnits(measurement)
                 if currentMethod in self._methodType.EIS:
                     simplifiedData[self._experimentList[experimentIndex]] = self._getEISDataPoints(measurement)
                 self.experimentToFileMap[self._experimentList[experimentIndex]] = file
@@ -276,6 +276,7 @@ class jparse:
             if xtext is not None:
                 unit['x'] = self._unitTextToScale(xtext)
                 unit['y'] = self._unitTextToScale(ytext)
+            unit['title'] = measurement.title
         except:
             print('Exception when processing units for SWV or CV.')
             unit = {}
