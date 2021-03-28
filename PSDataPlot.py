@@ -33,6 +33,15 @@ class PSPlot:
         self._filterOnMethod = True
         self._methodFilter = val
     
+    @property
+    def groups(self):
+        return self._groups
+        
+    @groups.setter
+    def groups(self, val):
+        self._grouping = True
+        self._groups = val
+        
     def __init__(self, PSData):
         self._filterOnMethod = False
         self._methodFilter = ''  
@@ -49,6 +58,8 @@ class PSPlot:
         self._titlesOn = False
         self._titleIndex = 0
         self.splitGraphs = False
+        self._grouping = False
+        self._groups = {}
     
     def show(self, experimentLabels = ''):
         # Experimental, use at own risk
@@ -124,13 +135,17 @@ class PSPlot:
     def _SWVAnalysis(self, measurement, experimentIndex):
         # get units from the dictionary
         units = {}
-        if self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Units'] is not None:
-            units = self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Units']
+        
+        if (self.PSData.experimentList[experimentIndex] + ' Details') in self.PSData.data:
+            units = self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Details']
         else:
+            units['x'] = {}
+            units['y'] = {}
             units['x']['unit'] = ''
             units['y']['unit'] = ''
             units['x']['scale'] = 1
             units['y']['scale'] = 1
+            units['title'] = ''
         
         if self.splitGraphs:
             # just create a new graph every time
@@ -140,14 +155,22 @@ class PSPlot:
             self._titleIndex += 1
         else:
             # check the dictionary for the graphs and add if exists
-            if not 'swv' in self._plots:
+            
+            tag = 'swv'
+            if self._grouping:
+                for group in self._groups:
+                    for item in self._groups[group]:
+                        if self.PSData.experimentList[experimentIndex] in item:
+                            tag = group
+
+            if not tag in self._plots:
                 figx, axx = plt.subplots()
                 axx.grid(True)
                 titleIndex = self._titleIndex
                 self._titleIndex += 1
-                self._plots['swv'] = [figx, axx, titleIndex]
+                self._plots[tag] = [figx, axx, titleIndex]
             else:
-                plotdata = self._plots['swv']        
+                plotdata = self._plots[tag]        
                 figx = plotdata[0]
                 axx = plotdata[1]
                 titleIndex = plotdata[2]
@@ -176,7 +199,7 @@ class PSPlot:
         for y in ax_baseline.yvalues:
             yMod.append(y/YUnits['scale'])
 
-        axx.plot(xMod, yMod, label=self.PSData.experimentList[experimentIndex])
+        axx.plot(xMod, yMod, label=(self.PSData.experimentList[experimentIndex] + ' : ' + units['title']))
         if self.units_on:
             axx.set_xlabel(XUnits['unit'] + 'V')
             axx.set_ylabel(YUnits['unit'] + 'A')
@@ -196,9 +219,11 @@ class PSPlot:
         
         # get units from the dictionary
         units = {}
-        if self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Units'] is not None:
-            units = self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Units']
+        if self.PSData.experimentList[experimentIndex] + ' Details' in self.PSData.data:
+            units = self.PSData.data[self.PSData.experimentList[experimentIndex] + ' Details']
         else:
+            units['x'] = {}
+            units['y'] = {}
             units['x']['unit'] = ''
             units['y']['unit'] = ''
             units['x']['scale'] = 1
@@ -212,14 +237,22 @@ class PSPlot:
             axx.grid(True)
         else:
             # check the dictionary for the graphs and add if exists
-            if not 'cv' in self._plots:
+            
+            tag = 'cv'
+            if self._grouping:
+                for group in self._groups:
+                    for item in self._groups[group]:
+                        if self.PSData.experimentList[experimentIndex] in item:
+                            tag = group
+                            
+            if not tag in self._plots:
                 figx, axx = plt.subplots()
                 axx.grid(True)
                 titleIndex = self._titleIndex
                 self._titleIndex += 1
-                self._plots['cv'] = [figx, axx, titleIndex]
+                self._plots[tag] = [figx, axx, titleIndex]
             else:
-                plotdata = self._plots['cv']        
+                plotdata = self._plots[tag]        
                 figx = plotdata[0]
                 axx = plotdata[1]
                 titleIndex = plotdata[2]
@@ -245,7 +278,7 @@ class PSPlot:
         for y in ax.yvalues:
             yMod.append(y/YUnits['scale'])
 
-        axx.plot(xMod,yMod, label=self.PSData.experimentList[experimentIndex])
+        axx.plot(xMod,yMod, label=self.PSData.experimentList[experimentIndex]+ ' : ' + units['title'])
         
         if self.units_on:
             axx.set_xlabel(XUnits['unit'] + 'V')
@@ -273,14 +306,21 @@ class PSPlot:
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            if not 'bode' in self._plots:
+            tag = 'bode'
+            if self._grouping:
+                for group in self._groups:
+                    for item in self._groups[group]:
+                        if self.PSData.experimentList[experimentIndex] in item:
+                            tag = group + tag
+            
+            if not tag in self._plots:
                 fig, ax1 = plt.subplots()
                 ax2 = ax1.twinx()
                 titleIndex = self._titleIndex
                 self._titleIndex += 1
-                self._plots['bode'] = [fig, ax1, ax2, titleIndex]
+                self._plots[tag] = [fig, ax1, ax2, titleIndex]
             else:
-                plotdata = self._plots['bode']        
+                plotdata = self._plots[tag]        
                 fig = plotdata[0]
                 ax1 = plotdata[1]
                 ax2 = plotdata[2]
@@ -313,14 +353,22 @@ class PSPlot:
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            if not 'cap' in self._plots:
+            
+            tag = 'ydash'
+            if self._grouping:
+                for group in self._groups:
+                    for item in self._groups[group]:
+                        if self.PSData.experimentList[experimentIndex] in item:
+                            tag = group + tag
+                            
+            if not tag in self._plots:
                 fig, ax1 = plt.subplots()
                 ax2 = ax1.twinx()
                 titleIndex = self._titleIndex
                 self._titleIndex += 1
-                self._plots['cap'] = [fig, ax1, ax2, titleIndex]
+                self._plots[tag] = [fig, ax1, ax2, titleIndex]
             else:
-                plotdata = self._plots['cap']        
+                plotdata = self._plots[tag]        
                 fig = plotdata[0]
                 ax1 = plotdata[1]
                 ax2 = plotdata[2]
@@ -358,13 +406,20 @@ class PSPlot:
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            if not 'Cap' in self._plots:
+            tag = 'cap'
+            if self._grouping:
+                for group in self._groups:
+                    for item in self._groups[group]:
+                        if self.PSData.experimentList[experimentIndex] in item:
+                            tag = group + tag
+            
+            if not tag in self._plots:
                 fig2, ax3 = plt.subplots()
                 titleIndex = self._titleIndex
                 self._titleIndex += 1
-                self._plots['Cap'] = [fig2, ax3, titleIndex]
+                self._plots[tag] = [fig2, ax3, titleIndex]
             else:
-                plotdata = self._plots['Cap']        
+                plotdata = self._plots[tag]        
                 fig2 = plotdata[0]
                 ax3 = plotdata[1]
                 titleIndex = plotdata[2]
@@ -404,13 +459,20 @@ class PSPlot:
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            if not 'Nyq' in self._plots:
+            tag = 'Nyq'
+            if self._grouping:
+                for group in self._groups:
+                    for item in self._groups[group]:
+                        if self.PSData.experimentList[experimentIndex] in item:
+                            tag = group + tag
+            
+            if not tag in self._plots:
                 fig2, ax3 = plt.subplots()
                 titleIndex = self._titleIndex
                 self._titleIndex += 1
-                self._plots['Nyq'] = [fig2, ax3, titleIndex]
+                self._plots[tag] = [fig2, ax3, titleIndex]
             else:
-                plotdata = self._plots['Nyq']        
+                plotdata = self._plots[tag]        
                 fig2 = plotdata[0]
                 ax3 = plotdata[1]
                 titleIndex = plotdata[2]
