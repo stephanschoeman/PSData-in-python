@@ -91,7 +91,13 @@ You can set a baseline for SWV graphs by setting the beginning and end points fo
 
 ```plot.baseline.endPosition = 65```
 
-and then lastly, if you want to plot specific experiments instead, fill in the experiment labels of the required experiments:
+Something experimental, you can group the experiments using the grouping tag and adding a dictionary of the groups to it:
+
+```plot.groups = {'G1':{'SWV 1','SWV 2'},'G2':{'SWV 3', 'SWV 4'},'G3':{'CV 1'},'G4':{'CV 2'}}```
+
+the group tags are not used except for lookups.
+
+Lastly, if you want to plot specific experiments instead, fill in the experiment labels of the required experiments:
 
 ```plot.show(['SWV 1', 'CV 3'])```
 
