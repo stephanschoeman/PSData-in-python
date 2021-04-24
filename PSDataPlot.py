@@ -44,6 +44,8 @@ class PSPlot:
         
     def __init__(self, PSData):
         self._filterOnMethod = False
+        self._PlotNotebookTags = []
+        self._PlotNotebookTagsIndex = 1        
         self._methodFilter = ''  
         self.methodType = MethodType()
         self.baseline = Baseline()
@@ -64,6 +66,10 @@ class PSPlot:
     def show(self, experimentLabels = ''):
         # Experimental, use at own risk
 
+        if self._PlotNotebookTagsIndex in self._PlotNotebookTags:
+            self._PlotNotebookTagsIndex = 1 + self._PlotNotebookTagsIndex
+        self._PlotNotebookTags.append(self._PlotNotebookTagsIndex)
+
         if self._titlesOn:        
             graphCount = self._getGraphCount()
             if len(self._titles) != graphCount:
@@ -74,7 +80,7 @@ class PSPlot:
         canPlotAll = False
         for currentMethod in self.PSData.experimentList:    
             canplot = True
-            
+
             if self._filterOnMethod and not self._methodFilter in currentMethod:
                 # filtermethod set and check the method
                 canplot = False
@@ -146,6 +152,8 @@ class PSPlot:
             units['x']['scale'] = 1
             units['y']['scale'] = 1
             units['title'] = ''
+
+        PlotTag = str(self._PlotNotebookTagsIndex)
         
         if self.splitGraphs:
             # just create a new graph every time
@@ -156,7 +164,7 @@ class PSPlot:
         else:
             # check the dictionary for the graphs and add if exists
             
-            tag = 'swv'
+            tag = 'swv' + PlotTag
             if self._grouping:
                 for group in self._groups:
                     for item in self._groups[group]:
@@ -228,6 +236,8 @@ class PSPlot:
             units['y']['unit'] = ''
             units['x']['scale'] = 1
             units['y']['scale'] = 1
+
+        PlotTag = str(self._PlotNotebookTagsIndex)
         
         if self.splitGraphs:
             # just create a new graph every time
@@ -238,7 +248,7 @@ class PSPlot:
         else:
             # check the dictionary for the graphs and add if exists
             
-            tag = 'cv'
+            tag = 'cv' + PlotTag
             if self._grouping:
                 for group in self._groups:
                     for item in self._groups[group]:
@@ -300,13 +310,16 @@ class PSPlot:
         self._plotEISCap(measurement, experimentIndex)
         
     def _plotEISNyq(self, measurement, experimentIndex):
+
+        PlotTag = str(self._PlotNotebookTagsIndex)
+
         if self.splitGraphs:
             fig, ax1 = plt.subplots()
             ax2 = ax1.twinx()
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            tag = 'bode'
+            tag = 'bode' + PlotTag
             if self._grouping:
                 for group in self._groups:
                     for item in self._groups[group]:
@@ -347,6 +360,11 @@ class PSPlot:
             ax2.legend(bbox_to_anchor=(1.3,1.05))
             
     def _plotEISYdash(self, measurement, experimentIndex):
+
+        PlotTag = ''
+        if self.PlotNotebook:
+            PlotTag = str(self._PlotNotebookTagsIndex) 
+
         if self.splitGraphs:
             fig, ax1 = plt.subplots()
             ax2 = ax1.twinx()
@@ -354,7 +372,7 @@ class PSPlot:
             self._titleIndex += 1
         else:
             
-            tag = 'ydash'
+            tag = 'ydash' + PlotTag
             if self._grouping:
                 for group in self._groups:
                     for item in self._groups[group]:
@@ -401,12 +419,15 @@ class PSPlot:
             ax1.legend(bbox_to_anchor=(1.3,1.05))
            
     def _plotEISCap(self, measurement, experimentIndex):
+
+        PlotTag = str(self._PlotNotebookTagsIndex)
+
         if self.splitGraphs:
             fig2, ax3 = plt.subplots()
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            tag = 'cap'
+            tag = 'cap' + PlotTag
             if self._grouping:
                 for group in self._groups:
                     for item in self._groups[group]:
@@ -454,12 +475,14 @@ class PSPlot:
                ax3.set_title(self.titles[titleIndex])
                
     def _plotEISZdashes(self, measurement, experimentIndex):
+        PlotTag = str(self._PlotNotebookTagsIndex)
+
         if self.splitGraphs:
             fig2, ax3 = plt.subplots()
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            tag = 'Nyq'
+            tag = 'Nyq' + PlotTag
             if self._grouping:
                 for group in self._groups:
                     for item in self._groups[group]:
