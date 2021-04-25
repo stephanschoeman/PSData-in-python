@@ -34,13 +34,19 @@
 
 Assuming you use the following line of code to get your parsed data:
 
-```simpleData = PS.jparse([r'C:\A.pssession',r'C:\B.pssession'])```
+```
+simpleData = PS.jparse([r'C:\A.pssession',r'C:\B.pssession'])
+```
 
 - List your experiments:
-  ```simpleData.experimentList```
+  ```
+  simpleData.experimentList
+  ```
   These are listed as the program finds them.
 - Find out where the experiment data comes from:
-  ```simpleData.inFile('SWV 1')```
+  ```
+  simpleData.inFile('SWV 1')
+  ```
   The experiment tags come from the experimentList.
 - SWV and CV x and y values can be accessed like this:
   ```simpleData.data['SWV 1'].xvalues``` and ```simpleData.data['SWV 1'].yvalues```
@@ -67,29 +73,40 @@ Assuming you use the following line of code to get your parsed data:
 
 If you want to use the plotting 'library', create the plot object from the simpleData:
 
-```plot = PSP.PSPlot(simpleData)```
+```
+plot = PSP.PSPlot(simpleData)
+```
 
 And then you can plot the data using:
 
-```plot.show()```
+```
+plot.show()
+```
 
 The graphs are joined by type, but if you want to split the experiments, set the following:
 
-```plot.splitGraphs = True```
+```
+plot.splitGraphs = True
+```
 
 You can set the titles of the graphs by populating the ```plot.titles``` list. If there are three graphs, you obviously need three titles:
 
-```plot.titles = ['Title 1', 'Title 2', 'Title 3']```
+```
+plot.titles = ['Title 1', 'Title 2', 'Title 3']
+```
 
 You can filter on method to plot only a specific method:
 
-```plot.methodFilter = 'EIS'```
+```
+plot.methodFilter = 'EIS'
+```
 
 You can set a baseline for SWV graphs by setting the beginning and end points for the baseline. It creates a linear baseline between the two points and subtracts it from the measured values:
 
-```plot.baseline.startPosition = 5```
-
-```plot.baseline.endPosition = 65```
+```
+plot.baseline.startPosition = 5
+plot.baseline.endPosition = 65
+```
 
 If you want to reset the baseline (if you repeadedly use the ```.show()``` command), then you can between the graphs use the reset statement:
 
@@ -102,13 +119,17 @@ plot.show(['SWV 1'])
 
 Something experimental, you can group the experiments using the grouping tag and adding a dictionary of the groups to it:
 
-```plot.groups = {'G1':{'SWV 1','SWV 2'},'G2':{'SWV 3', 'SWV 4'},'G3':{'CV 1'},'G4':{'CV 2'}}```
+```
+plot.groups = {'G1':{'SWV 1','SWV 2'},'G2':{'SWV 3', 'SWV 4'},'G3':{'CV 1'},'G4':{'CV 2'}}
+```
 
 the group tags are not used except for lookups.
 
 Lastly, if you want to plot specific experiments instead, fill in the experiment labels of the required experiments:
 
-```plot.show(['SWV 1', 'CV 3'])```
+```
+plot.show(['SWV 1', 'CV 3'])
+```
 
 ## Addtional notes:
 I use Jupyter Notebooks for my work. If you use this, the variables are stored per plot object. This means if you set a variable (like the baseline) in a cell and you run the cell above it again with the same plot object the baseline variable will be used in that cell as well.
