@@ -361,9 +361,7 @@ class PSPlot:
             
     def _plotEISYdash(self, measurement, experimentIndex):
 
-        PlotTag = ''
-        if self.PlotNotebook:
-            PlotTag = str(self._PlotNotebookTagsIndex) 
+        PlotTag = str(self._PlotNotebookTagsIndex) 
 
         if self.splitGraphs:
             fig, ax1 = plt.subplots()
