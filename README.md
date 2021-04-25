@@ -91,6 +91,15 @@ You can set a baseline for SWV graphs by setting the beginning and end points fo
 
 ```plot.baseline.endPosition = 65```
 
+If you want to reset the baseline (if you repeadedly use the ```.show()``` command), then you can between the graphs use the reset statement:
+
+```
+plot.baseline.startPosition = 5
+plot.show(['SWV 1'])
+plot.baseline.resetBaseline = True
+plot.show(['SWV 1'])
+```
+
 Something experimental, you can group the experiments using the grouping tag and adding a dictionary of the groups to it:
 
 ```plot.groups = {'G1':{'SWV 1','SWV 2'},'G2':{'SWV 3', 'SWV 4'},'G3':{'CV 1'},'G4':{'CV 2'}}```
