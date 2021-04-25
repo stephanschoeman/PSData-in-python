@@ -184,14 +184,14 @@ class PSPlot:
                 titleIndex = plotdata[2]
         
         # generate the baseline
-        self.baseline.generateBaseline(measurement.xvalues, measurement.yvalues)
+        self.baseline._generateBaseline(measurement.xvalues, measurement.yvalues)
         
         # subtract the baseline
         pos = 0
         ax_baseline = axis()
         for y in measurement.yvalues:
             ax_baseline.xvalues.append(measurement.xvalues[pos]/units['x']['scale'])
-            ax_baseline.yvalues.append(self.baseline.subtract(measurement.xvalues[pos],y)/units['y']['scale'])
+            ax_baseline.yvalues.append(self.baseline._subtract(measurement.xvalues[pos],y)/units['y']['scale'])
             pos = pos + 1
         
         # kind of backwards, translated to Ampere, and then we determine what would be the better scale
@@ -600,6 +600,7 @@ class Baseline:
         self._endPosition = -1
         self._subtractBaseline = False
         self._generatedBaseline = False
+        self.resetBaseline = False
         self._gradient = 0
         self._constant = 0
         
@@ -610,6 +611,7 @@ class Baseline:
     @startPosition.setter
     def startPosition(self, val):
         self._subtractBaseline = True
+        self.resetBaseline = False
         self._startPosition = val
 
     @property
@@ -618,9 +620,11 @@ class Baseline:
     
     @endPosition.setter
     def endPosition(self, val):
+        self._subtractBaseline = True
+        self.resetBaseline = False
         self._endPosition = val
     
-    def generateBaseline(self, x, y):
+    def _generateBaseline(self, x, y):
         if self._subtractBaseline:
             try:
                 if self.endPosition == -1:
@@ -631,8 +635,8 @@ class Baseline:
             except:
                 print('Exception: Could not generate baseline. Check validity of startPosition and endPosition.')
             
-    def subtract(self, x, y):
-        if self._subtractBaseline and self._generatedBaseline:
+    def _subtract(self, x, y):
+        if self._subtractBaseline and self._generatedBaseline and not self.resetBaseline:
             return (y - (self._gradient*x + self._constant))
         return y
 
