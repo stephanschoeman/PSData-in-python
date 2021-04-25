@@ -101,6 +101,13 @@ Lastly, if you want to plot specific experiments instead, fill in the experiment
 
 ```plot.show(['SWV 1', 'CV 3'])```
 
+## Addtional notes:
+I use Jupyter Notebooks for my work. If you use this, the variables are stored per plot object. This means if you set a variable (like the baseline) in a cell and you run the cell above it again with the same plot object the baseline variable will be used in that cell as well.
+
+You can overcome this by creating a new plot object per cell (which is tedious) or you can execute the cells in sequential order if you need to run cells above the current working cell. You are able to use the ```.show()``` command in different cells, so if you analyse your data in this way just make sure that you either reset the variables you have used before, or run everything sequentially.
+
+I will have a look around to overcome this some time in the future :)
+
 ## Example plots:
 
 SWV and Cyclic voltammetry:
