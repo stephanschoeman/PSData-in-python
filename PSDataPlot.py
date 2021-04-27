@@ -115,7 +115,7 @@ class PSPlot:
     def _getPeakRatios(self):
         # Beta
         for group in self.groups:
-            if len(group) == 2:
+            if len(self.groups[group]) == 2:
                 peak1 = 0
                 tag1 = ''
                 for exp in self.groups[group]:
