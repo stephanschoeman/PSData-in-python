@@ -62,6 +62,7 @@ class PSPlot:
         self.splitGraphs = False
         self._grouping = False
         self._groups = {}
+        self.peaks = {}
     
     def show(self, experimentLabels = ''):
         # Experimental, use at own risk
@@ -103,12 +104,29 @@ class PSPlot:
             
         if canPlotAll:
             plt.show()
+            if len(self.groups) > 0:
+                self._getPeakRatios()
         else:
             if not self._methodFilter in experimentLabels:
                 print('All plot() arguments are filtered out by the method filter')
             else:
                 print('No data found for: ' + self.methodFilter)
                 
+    def _getPeakRatios(self):
+        # Beta
+        for group in self.groups:
+            if len(group) == 2:
+                peak1 = 0
+                tag1 = ''
+                for exp in self.groups[group]:
+                    if 'SWV' in exp:
+                        if peak1 == 0:
+                            peak1 = self.peaks[exp]
+                            tag1 = exp
+                        else:
+                            peak2 = self.peaks[exp]
+                            print('Ratio: ' + tag1 + '/' + exp + ' = ' + "{:.2f}".format(round((peak1/peak2)*100, 2)) + r'%')
+
     def _getGraphCount(self):
         ''' NB, change the amount of EIS graphs as they get developed '''
         eisCount =  len([i for i, s in enumerate(self.PSData.experimentList) if 'EIS' in s])*3
@@ -163,13 +181,18 @@ class PSPlot:
             self._titleIndex += 1
         else:
             # check the dictionary for the graphs and add if exists
-            
+
             tag = 'swv' + PlotTag
             if self._grouping:
                 for group in self._groups:
                     for item in self._groups[group]:
                         if self.PSData.experimentList[experimentIndex] in item:
                             tag = group
+            
+            if self._grouping and tag == ('swv' + PlotTag):
+                # if we are grouping and tag is not in group, exit.
+                # not implemented for other methods
+                return
 
             if not tag in self._plots:
                 figx, axx = plt.subplots()
@@ -208,6 +231,18 @@ class PSPlot:
             yMod.append(y/YUnits['scale'])
 
         axx.plot(xMod, yMod, label=(self.PSData.experimentList[experimentIndex] + ' : ' + units['title']))
+        
+        # get and save the minimum values
+        minv = min(yMod)
+        minv_index = yMod.index(minv)
+        print(self.PSData.experimentList[experimentIndex] + ' min: (' + str(xMod[minv_index]) + ',' + str(minv) + ')' )
+
+        if len(self.groups) > 0:
+            for group in self.groups:
+                for exp in self.groups[group]:
+                    if self.PSData.experimentList[experimentIndex] in exp:
+                        self.peaks[self.PSData.experimentList[experimentIndex]] = minv
+
         if self.units_on:
             axx.set_xlabel(XUnits['unit'] + 'V')
             axx.set_ylabel(YUnits['unit'] + 'A')
@@ -582,8 +617,8 @@ class PSPlot:
     def _getUnits(self, curveTitle):
         details = curveTitle.split(" ")
         return [details[3], details[1]]
-        
-    
+
+     
 class MethodType:
     __slots__ = ['CV','SWV','EIS']
     
