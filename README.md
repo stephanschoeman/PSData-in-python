@@ -125,6 +125,13 @@ plot.groups = {'G1':{'SWV 1','SWV 2'},'G2':{'SWV 3', 'SWV 4'},'G3':{'CV 1'},'G4'
 
 the group tags are not used except for lookups.
 
+I use the SWV analysis to compare the peaks of two experiments. If you group two SWV experiments together, the peak ratio will be calculated based on the minimum value of the experiment. If you grouped SWV 1 and 2, and SWV 3 and 4, the output will also print the following:
+
+```
+Ratio: SWV 2/SWV 1 = 180.51%
+Ratio: SWV 3/SWV 4 = 658.99%
+```
+
 Lastly, if you want to plot specific experiments instead, fill in the experiment labels of the required experiments:
 
 ```
