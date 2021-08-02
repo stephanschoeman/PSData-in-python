@@ -182,12 +182,7 @@ class PSPlot:
         else:
             # check the dictionary for the graphs and add if exists
 
-            tag = 'swv' + PlotTag
-            if self._grouping:
-                for group in self._groups:
-                    for item in self._groups[group]:
-                        if self.PSData.experimentList[experimentIndex] in item:
-                            tag = group
+            tag = self._getGraphTag('swv' + PlotTag,experimentIndex)
             
             if self._grouping and tag == ('swv' + PlotTag):
                 # if we are grouping and tag is not in group, exit.
@@ -208,7 +203,7 @@ class PSPlot:
         
         # generate the baseline
         self.baseline._generateBaseline(measurement.xvalues, measurement.yvalues)
-        
+
         # subtract the baseline
         pos = 0
         ax_baseline = axis()
@@ -240,7 +235,7 @@ class PSPlot:
         if len(self.groups) > 0:
             for group in self.groups:
                 for exp in self.groups[group]:
-                    if self.PSData.experimentList[experimentIndex] in exp:
+                    if self.PSData.experimentList[experimentIndex] == exp:
                         self.peaks[self.PSData.experimentList[experimentIndex]] = minv
 
         if self.units_on:
@@ -282,13 +277,7 @@ class PSPlot:
             axx.grid(True)
         else:
             # check the dictionary for the graphs and add if exists
-            
-            tag = 'cv' + PlotTag
-            if self._grouping:
-                for group in self._groups:
-                    for item in self._groups[group]:
-                        if self.PSData.experimentList[experimentIndex] in item:
-                            tag = group
+            tag = self._getGraphTag('cv' + PlotTag,experimentIndex)
                             
             if not tag in self._plots:
                 figx, axx = plt.subplots()
@@ -354,12 +343,7 @@ class PSPlot:
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            tag = 'bode' + PlotTag
-            if self._grouping:
-                for group in self._groups:
-                    for item in self._groups[group]:
-                        if self.PSData.experimentList[experimentIndex] in item:
-                            tag = group + tag
+            tag = self._getGraphTag('bode' + PlotTag,experimentIndex)
             
             if not tag in self._plots:
                 fig, ax1 = plt.subplots()
@@ -405,12 +389,7 @@ class PSPlot:
             self._titleIndex += 1
         else:
             
-            tag = 'ydash' + PlotTag
-            if self._grouping:
-                for group in self._groups:
-                    for item in self._groups[group]:
-                        if self.PSData.experimentList[experimentIndex] in item:
-                            tag = group + tag
+            tag = self._getGraphTag('ydash' + PlotTag,experimentIndex)
                             
             if not tag in self._plots:
                 fig, ax1 = plt.subplots()
@@ -460,12 +439,7 @@ class PSPlot:
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            tag = 'cap' + PlotTag
-            if self._grouping:
-                for group in self._groups:
-                    for item in self._groups[group]:
-                        if self.PSData.experimentList[experimentIndex] in item:
-                            tag = group + tag
+            tag = self._getGraphTag('cap' + PlotTag,experimentIndex)
             
             if not tag in self._plots:
                 fig2, ax3 = plt.subplots()
@@ -515,12 +489,7 @@ class PSPlot:
             titleIndex = self._titleIndex
             self._titleIndex += 1
         else:
-            tag = 'Nyq' + PlotTag
-            if self._grouping:
-                for group in self._groups:
-                    for item in self._groups[group]:
-                        if self.PSData.experimentList[experimentIndex] in item:
-                            tag = group + tag
+            tag = self._getGraphTag('Nyq' + PlotTag,experimentIndex)
             
             if not tag in self._plots:
                 fig2, ax3 = plt.subplots()
@@ -618,6 +587,13 @@ class PSPlot:
         details = curveTitle.split(" ")
         return [details[3], details[1]]
 
+    def _getGraphTag(self, tag, experimentIndex):
+        if self._grouping:
+            for group in self._groups:
+                for item in self._groups[group]:
+                    if self.PSData.experimentList[experimentIndex] == item:
+                        tag = group + tag
+        return tag
      
 class MethodType:
     __slots__ = ['CV','SWV','EIS']
