@@ -161,7 +161,7 @@ Let me know if you have ideas for additional basic functionality.
 
 ToDo:
 - [ ] Curve smoothing with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)
-- [ ] Peak detection
+- [x] Peak detection
 - [ ] Dynamic baseline by using the first and second derivatives
 - [ ] Method summary printout and experiment grouping
-- [ ] % peak comparison printout for grouped experiments
+- [x] % peak comparison printout for grouped experiments
