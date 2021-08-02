@@ -105,15 +105,16 @@ class PSPlot:
         if canPlotAll:
             plt.show()
             if len(self.groups) > 0:
-                self._getPeakRatios()
+                self.getPeakRatios()
         else:
             if not self._methodFilter in experimentLabels:
                 print('All plot() arguments are filtered out by the method filter')
             else:
                 print('No data found for: ' + self.methodFilter)
                 
-    def _getPeakRatios(self):
+    def getPeakRatios(self, printF = True):
         # Beta
+        ratios = {}
         for group in self.groups:
             if len(self.groups[group]) == 2:
                 peak1 = 0
@@ -123,9 +124,24 @@ class PSPlot:
                         if peak1 == 0:
                             peak1 = self.peaks[exp]
                             tag1 = exp
+                            nr1 = int(tag1.split()[1])
                         else:
                             peak2 = self.peaks[exp]
-                            print('Ratio: ' + tag1 + '/' + exp + ' = ' + "{:.2f}".format(round((peak1/peak2)*100, 2)) + r'%')
+                            nr2 = int(exp.split()[1])
+                            returnTag = ''
+                            returnValue = 0.0
+                            if nr1 < nr2:
+                                returnTag = tag1 + '/' + exp
+                                returnValue = peak1/peak2
+                            else:
+                                returnTag = exp + '/' + tag1
+                                returnValue = peak2/peak1
+                            if printF:
+                                print('Ratio: ' + returnTag + ' = ' + "{:.2f}".format(round((returnValue)*100, 2)) + r'%')
+                            ratios[returnTag] = returnValue
+        return ratios
+                    
+
 
     def _getGraphCount(self):
         ''' NB, change the amount of EIS graphs as they get developed '''
