@@ -160,8 +160,8 @@ Here is an example of an EIS experiment:
 Let me know if you have ideas for additional basic functionality.
 
 ToDo:
-- [ ] Curve smoothing with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)
+- [ ] ~~Curve smoothing with [Savitzky–Golay filter](https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter)~~
 - [x] Peak detection
-- [ ] Dynamic baseline by using the first and second derivatives
-- [ ] Method summary printout and experiment grouping
+- [ ] ~~Dynamic baseline by using the first and second derivatives~~
+- [x] Method summary printout and experiment grouping
 - [x] % peak comparison printout for grouped experiments
