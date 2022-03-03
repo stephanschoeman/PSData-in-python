@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Schoeman
+    given-names: Stephan
+    orcid: https://orcid.org/0000-0002-5851-3066
+title: “PSData in Python"
+version: 1.0.0
+doi: 10.5281/zenodo.6325231
+date-released: 2022-03-03
