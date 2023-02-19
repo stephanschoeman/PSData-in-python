@@ -241,8 +241,8 @@ class jparse:
         
         try:
             for file in self.files:
-                for measurement in parsedData[file].measurements:
-                    currentMethod = self._getMethodType(measurement.method).upper()
+                for measurement in parsedData[file].Measurements:
+                    currentMethod = self._getMethodType(measurement.Method).upper()
                     index = len([i for i, s in enumerate(self._experimentList) if currentMethod in s])
                     self._experimentList.append(currentMethod + ' ' + str(index + 1))
         except:
@@ -255,8 +255,8 @@ class jparse:
         experimentIndex = 0
         for file in self.files:
             rawData = self._parsedData[file]
-            for measurement in rawData.measurements:
-                currentMethod = self._getMethodType(measurement.method).upper()
+            for measurement in rawData.Measurements:
+                currentMethod = self._getMethodType(measurement.Method).upper()
                 if currentMethod in self._methodType.SWV or currentMethod in self._methodType.CV:
                     simplifiedData[self._experimentList[experimentIndex]] = self._getXYDataPoints(measurement)
                     simplifiedData[self._experimentList[experimentIndex] + ' Details'] = self._getXYUnits(measurement)
@@ -271,12 +271,12 @@ class jparse:
     def _getXYUnits(self, measurement):
         unit = {}
         try:
-            xtext = measurement.curves[0].xaxisdataarray.unit.type
-            ytext = measurement.curves[0].yaxisdataarray.unit.type
+            xtext = measurement.Curves[0].XAxisDataArray.Unit.Type
+            ytext = measurement.Curves[0].YAxisDataArray.Unit.Type
             if xtext is not None:
                 unit['x'] = self._unitTextToScale(xtext)
                 unit['y'] = self._unitTextToScale(ytext)
-            unit['title'] = measurement.title
+            unit['title'] = measurement.Title
         except:
             print('Exception when processing units for SWV or CV.')
             unit = {}
@@ -305,47 +305,47 @@ class jparse:
     
     def _getXYDataPoints(self, measurement):
         ax = axis()
-        for curve in measurement.curves:
+        for curve in measurement.Curves:
             pos = 0
-            for y in curve.yaxisdataarray.datavalues:
-                ax.xvalues.append(curve.xaxisdataarray.datavalues[pos].v)
-                ax.yvalues.append(y.v)
+            for y in curve.YAxisDataArray.DataValues:
+                ax.xvalues.append(curve.XAxisDataArray.DataValues[pos].V)
+                ax.yvalues.append(y.V)
                 pos = pos + 1
         return ax
     
     def _getEISDataPoints(self, measurement):
         eisdata = EISMeasurement()                   
-        for eis in measurement.eisdatalist:
-            for value in eis.dataset.values:
-                if value.unit.q is not None:
+        for eis in measurement.EISDataList:
+            for value in eis.DataSet.Values:
+                if value.Unit.Q is not None:
                     v = []
-                    for c in value.datavalues:
-                        v.append(c.v)
-                    if value.unit.q == "Frequency":
+                    for c in value.DataValues:
+                        v.append(c.V)
+                    if value.Unit.Q == "Frequency":
                         eisdata.freq = v
-                    if value.unit.q == "Z'":
+                    if value.Unit.Q == "Z'":
                         eisdata.zdash = v
-                    if value.unit.q == "Potential'":
+                    if value.Unit.Q == "Potential'":
                         eisdata.potential = v
-                    if value.unit.q == "-Z''":
+                    if value.Unit.Q == "-Z''":
                         eisdata.zdashneg = v
-                    if value.unit.q == "Z":
+                    if value.Unit.Q == "Z":
                         eisdata.Z = v
-                    if value.unit.q == "-Phase":
+                    if value.Unit.Q == "-Phase":
                         eisdata.phase = v
-                    if value.unit.q == "npoints":
+                    if value.Unit.Q == "npoints":
                         eisdata.npoints = v
-                    if value.unit.q == "tint":
+                    if value.Unit.Q == "tint":
                         eisdata.tint = v
-                    if value.unit.q == "ymean":
+                    if value.Unit.Q == "ymean":
                         eisdata.ymean = v
-                    if value.unit.q == "debugtext":
+                    if value.Unit.Q == "debugtext":
                         eisdata.debugtext = v
-                    if value.unit.q == "Y":
+                    if value.Unit.Q == "Y":
                         eisdata.Y = v
-                    if value.unit.q == "Y'":
+                    if value.Unit.Q == "Y'":
                         eisdata.YRe = v
-                    if value.unit.q == "Y''":
+                    if value.Unit.Q == "Y''":
                         eisdata.YIm = v
                         
         pos = 0
